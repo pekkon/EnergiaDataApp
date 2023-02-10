@@ -1,11 +1,12 @@
 import streamlit as st
 from streamlit_extras.chart_container import chart_container
-import plotly
+from streamlit_extras.mention import mention
 import plotly.express as px
 import pandas as pd
 import numpy as np
 import datetime
 from src.fingridapi import get_data_from_FG_API_with_start_end
+from streamlit_extras.buy_me_a_coffee import button
 
 st.set_page_config(
     page_title="EnergiaBotti - Tuuli- ja sähköjärjestelmätilastoja",
@@ -60,7 +61,7 @@ st.subheader('Tuulivoiman tilastoja')
 st.sidebar.info("Valitse aikaikkuna 📆")
 start_date = st.sidebar.date_input("Päivä alkaen", datetime.date(2023, 1, 1))
 end_date = st.sidebar.date_input("Päivä saakka", datetime.datetime.now(), key="end_date_selection")
-aggregation_selection = st.sidebar.radio('Valitse aggregointitaso 📅', ['Tunti', 'Päivä', 'Viikko', 'Kuukausi'])
+aggregation_selection = st.sidebar.radio('Valitse aggregointitaso 🕑', ['Tunti', 'Päivä', 'Viikko', 'Kuukausi'])
 tab1, tab2 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Muita tuulivoimatilastoja'])
 
 with tab1:
@@ -98,6 +99,26 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
 
 
-
 with tab2:
     st.write("Tähän esim. piirakkakuva Suomen tuotantojakaumasta tällä hetkellä")
+
+with st.sidebar:
+    st.subheader("Ota yhteyttä:")
+
+
+    pekko = mention(
+        label="Pekko Niemi",
+        icon="twitter",  # Notion is also featured!
+        url="https://twitter.com/PekkoNiemi"
+    )
+
+    energiabotti = mention(
+        label="EnergiaBotti",
+        icon="twitter",  # Notion is also featured!
+        url="https://twitter.com/EnergiaBotti"
+    )
+
+
+    button("pekko", False, "Buy me a pizza", "🍕")
+
+    st.write(f'Datalähteenä Fingridin avoin data: data.fingrid.fi')
