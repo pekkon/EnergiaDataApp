@@ -8,4 +8,4 @@ st.set_page_config(
     initial_sidebar_state='expanded'
 )
 
-st.title("Sähköjärjestelmän tila")
+st.title("Muita sähköjärjestelmän tilastoja")
