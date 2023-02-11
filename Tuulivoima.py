@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from src.general_functions import get_general_layout, aggregate_data
 from src.fingridapi import get_data_from_FG_API_with_start_end
-
+import datetime
 
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
@@ -14,7 +14,9 @@ st.set_page_config(
     layout='wide',
     initial_sidebar_state='expanded'
 )
-
+curr_date = datetime.datetime.now()
+st.session_state['start_date_max_value'] = curr_date
+st.session_state['end_date_selected'] = curr_date
 
 @st.cache_data(show_spinner=False, max_entries=200)
 def get_demand_df(start, end):
@@ -52,9 +54,12 @@ def get_wind_df(start, end):
 
 
 start_date, end_date, aggregation_selection = get_general_layout()
+
 st.subheader('Tuulivoiman tilastoja')
 # Create tabs for different visualizations
 tab1, tab2 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Muita tuulivoimatilastoja'])
+
+
 
 with tab1:
     # tab1 will include visualization of wind production, capacity and

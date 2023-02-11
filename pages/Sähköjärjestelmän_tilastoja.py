@@ -1,13 +1,14 @@
+import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly
 from streamlit_extras.chart_container import chart_container
 from src.fingridapi import get_data_from_FG_API_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
-
-
+from fmiopendata.wfs import download_stored_query
+from datetime import datetime, time
 st.set_page_config(
-    page_title="EnergiaBotti - Tuuli- ja sähköjärjestelmätilastoja",
+    page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
     layout='wide',
     initial_sidebar_state='expanded'
@@ -32,6 +33,7 @@ def get_production_and_demand_df(start, end):
 
 
 start_date, end_date, aggregation_selection = get_general_layout()
+
 st.subheader('Suomen tuotanto- ja kulutustilastoja')
 
 prod_dem_df = get_production_and_demand_df(start_date, end_date)
