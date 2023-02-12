@@ -66,11 +66,15 @@ st.header("Tuulen ja lämpötilan korrelaatio")
 # Get data from start of 2020 until 2023 Feb and save it in cache
 
 st.markdown("Tuulivoimatuotannon valitun aggregointitason mukaisen käyttöasteen "
-            "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) sekä keskilämpötilan välinen xy-kuvaaja"
-            " kuvaa tuulen ja lämpötilan korrelaatiota. Keskilämpötila on laskettu Helsingin, Jämsän, Oulun ja"
+            "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) sekä keskilämpötilan välinen xy-kuvaaja "
+            "kuvaa tuulen ja lämpötilan korrelaatiota. Keskilämpötila on laskettu Helsingin, Jämsän, Oulun ja "
             "Rovaniemen tuntilämpötiloista. Lämpötiladatan lähteenä on "
-            "[Ilmatieteen laitos](https://www.ilmatieteenlaitos.fi/avoin-data).")
-st.write("Voit halutessasi piilottaa kuvasta eri vuosien datoja klikkaamalla niitä selitteestä.")
+            "[Ilmatieteen laitos](https://www.ilmatieteenlaitos.fi/avoin-data). Dataa on käytettävissä vuoden 2018 "
+            "alusta alkaen.")
+st.markdown("Voit halutessasi piilottaa kuvasta eri vuosien datoja tai sovitteen klikkaamalla niitä selitteestä. "
+            "Tuplaklikkauksella voit valita tietyn vuoden ainoastaan näkyviin. ")
+st.markdown("Sovitteena kuvaajassa käytetään epälineaarista lokaalia regressiomallia "
+            "[LOWESS](https://en.wikipedia.org/wiki/Local_regression), mikä lasketaan koko valitulle ajanjaksolle.")
 
 color = None
 
@@ -85,10 +89,12 @@ else:
     # Then take more recent data to avoid loading too much data every time
     df = get_temperatures(new_start_dt, datetime.datetime.now())
     with chart_container(df, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
-        fig = px.scatter(df, x='Keskilämpötila', y='Käyttöaste', color=color, trendline="ols",
-                         trendline_scope="overall", opacity=0.6, height=700)
-        fig.data[-1].name = 'Trendi'
-        fig.data[-1].showlegend = True
-        fig.update_layout(dict(yaxis_title='%', xaxis_range=[-30, 30], yaxis_range=[-2, 100],
+        fig = px.scatter(df, x='Keskilämpötila', y='Käyttöaste', color=color, trendline="lowess",
+                         trendline_scope="overall", opacity=0.5, height=700)
+
+        fig.update_layout(dict(yaxis_title='%', xaxis_autorange=True, yaxis_range=[-2, 100],
                                xaxis_title='Lämpötila', yaxis_tickformat=",.2r"))
+        fig.data[-1].name = 'Sovite (LOWESS)'
+        fig.data[-1].update(line_width=4, opacity=1)
+        fig.data[-1].showlegend = True
         st.plotly_chart(fig, use_container_width=True)

@@ -40,17 +40,22 @@ def get_wind_df(start, end):
     :param end: end date
     :return: wind dataframe
     """
-    wind_df = get_data_from_FG_API_with_start_end(75, start, end)
-    wind_df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
+    df = get_data_from_FG_API_with_start_end(75, start, end)
+    df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
+    print(df.info())
+
 
     wind_capacity = get_data_from_FG_API_with_start_end(268, start, end)
     # Fixing issues in the API capacity (sometimes capacity is missing and API gives low value)
     wind_capacity.loc[wind_capacity['Value'] < wind_capacity['Value'].shift(-24), 'Value'] = np.NaN
-    wind_capacity['Value'] = wind_capacity['Value'].ffill()
-    wind_df['Kapasiteetti'] = wind_capacity['Value']
-    wind_df['Käyttöaste'] = wind_df['Tuulituotanto'] / wind_df['Kapasiteetti'] * 100
+    df['Kapasiteetti'] = wind_capacity['Value']
 
-    return wind_df.round(1)
+    df['Käyttöaste'] = df['Tuulituotanto'] / df['Kapasiteetti'] * 100
+    # Due to issues with input data with strange timestamps, we need to resample the data
+    df = df.resample('H')
+    # Interpolate missing values linearly
+    df = df.interpolate()
+    return df.round(1)
 
 
 start_date, end_date, aggregation_selection = get_general_layout()
@@ -72,13 +77,19 @@ with tab1:
         # Wind production metrics and graph
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Maksimituotanto", f"{int(aggregated_wind['Tuulituotanto'].max() + 0.5)} MW")
+            st.metric("Maksimituotanto", f"{round(aggregated_wind['Tuulituotanto'].max(), 1)} MW")
         with col2:
-            st.metric("Keskimääräinen tuotanto", f"{int(aggregated_wind['Tuulituotanto'].mean() + 0.5)} MW")
+            st.metric("Keskimääräinen tuotanto", f"{round(aggregated_wind['Tuulituotanto'].mean(), 1)} MW")
         with col3:
-            st.metric("Minimituotanto", f"{int(aggregated_wind['Tuulituotanto'].min() + 0.5)} MW")
-        fig = px.line(aggregated_wind, x=aggregated_wind.index, y=['Tuulituotanto', 'Kapasiteetti'],
-                      title="Tuulivoimatuotanto ja asennettu kapasiteetti")
+            st.metric("Minimituotanto", f"{round(aggregated_wind['Tuulituotanto'].min(), 1)} MW")
+        fig = px.scatter(aggregated_wind, x=aggregated_wind.index, y=['Tuulituotanto', 'Kapasiteetti'],
+                        title="Tuulivoimatuotanto ja asennettu kapasiteetti", trendline='expanding',
+                        trendline_options=dict(function="max"))
+        fig.update_traces(mode='lines')
+        fig.data[1].update(dict(name='Tuulivoimatuotannon ennätys', legendgroup=None, showlegend=True,
+                                visible='legendonly', line_color='#FF4B4B'))
+        # Remove trend line for max capacity
+        fig.data = fig.data[:-1]
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW'), legend_title="Aikasarja")
         st.plotly_chart(fig, use_container_width=True)

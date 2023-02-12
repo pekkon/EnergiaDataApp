@@ -41,7 +41,17 @@ aggregated_df = aggregate_data(prod_dem_df, aggregation_selection)
 
 # Using chart_container that allows user to look into the data or download it from separate tabs
 with chart_container(aggregated_df, ["Kuvaajat 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
-    # Production and demand graphs
+    # Demand and production metrics and graph
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Maksimikulutus", f"{int(aggregated_df['Kulutus'].max() + 0.5)} MW")
+        st.metric("Maksimituotanto", f"{int(aggregated_df['Tuotanto'].max() + 0.5)} MW")
+    with col2:
+        st.metric("Keskimääräinen kulutus", f"{int(aggregated_df['Kulutus'].mean() + 0.5)} MW")
+        st.metric("Keskimääräinen tuotanto", f"{int(aggregated_df['Tuotanto'].mean() + 0.5)} MW")
+    with col3:
+        st.metric("Minimikulutus", f"{int(aggregated_df['Kulutus'].min() + 0.5)} MW")
+        st.metric("Minimituotanto", f"{int(aggregated_df['Tuotanto'].min() + 0.5)} MW")
     fig = px.line(aggregated_df, x=aggregated_df.index, y=['Tuotanto', 'Kulutus'],
                   title="Suomen tuotanto ja kulutus")
     fig.update_traces(line=dict(width=2.5))
