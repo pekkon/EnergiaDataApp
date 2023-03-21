@@ -1,22 +1,17 @@
 import plotly.subplots
 import streamlit as st
-from streamlit_extras.chart_container import chart_container
-import plotly.express as px
-import pandas as pd
-import numpy as np
-from src.general_functions import get_general_layout, aggregate_data
-from src.fingridapi import get_data_from_FG_API_with_start_end
-import datetime
-
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
     layout='wide',
     initial_sidebar_state='expanded'
 )
-curr_date = datetime.datetime.now()
-st.session_state['start_date_max_value'] = curr_date
-st.session_state['end_date_selected'] = curr_date
+from streamlit_extras.chart_container import chart_container
+import plotly.express as px
+import numpy as np
+from src.general_functions import get_general_layout, aggregate_data
+from src.fingridapi import get_data_from_FG_API_with_start_end
+
 
 @st.cache_data(show_spinner=False, max_entries=200)
 def get_demand_df(start, end):
@@ -42,19 +37,17 @@ def get_wind_df(start, end):
     """
     df = get_data_from_FG_API_with_start_end(75, start, end)
     df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
-    print(df.info())
-
 
     wind_capacity = get_data_from_FG_API_with_start_end(268, start, end)
     # Fixing issues in the API capacity (sometimes capacity is missing and API gives low value)
     wind_capacity.loc[wind_capacity['Value'] < wind_capacity['Value'].shift(-24), 'Value'] = np.NaN
     df['Kapasiteetti'] = wind_capacity['Value']
-
-    df['Käyttöaste'] = df['Tuulituotanto'] / df['Kapasiteetti'] * 100
     # Due to issues with input data with strange timestamps, we need to resample the data
     df = df.resample('H')
     # Interpolate missing values linearly
     df = df.interpolate()
+
+    df['Käyttöaste'] = df['Tuulituotanto'] / df['Kapasiteetti'] * 100
     return df.round(1)
 
 
@@ -62,8 +55,7 @@ start_date, end_date, aggregation_selection = get_general_layout()
 
 st.subheader('Tuulivoiman tilastoja')
 # Create tabs for different visualizations
-tab1, tab2 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Muita tuulivoimatilastoja'])
-
+tab1, tab2 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Tuulen osuus kulutuksesta'])
 
 
 with tab1:
@@ -110,11 +102,8 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
 
 
-
-
 with tab2:
     # tab2 could include other visualizations or statistics, TBC
-
 
     demand_df = get_demand_df(start_date, end_date)
     demand_df['Tuulituotannon osuus kulutuksesta'] = wind_df['Tuulituotanto']/demand_df['Kulutus'] * 100
@@ -136,9 +125,7 @@ with tab2:
 
         fig = px.line(aggregated_demand, x=aggregated_demand.index, y=['Tuulituotannon osuus kulutuksesta'])
         fig2 = px.line(aggregated_demand, x=aggregated_demand.index, y=['Kulutus'])
-
         fig2.update_traces(yaxis="y2")
-
         subfig.add_traces(fig.data + fig2.data)
         subfig.layout.xaxis.title = "Time"
         subfig.layout.yaxis.title = "%"

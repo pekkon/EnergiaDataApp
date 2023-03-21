@@ -85,14 +85,14 @@ else:
     if st_toggle_switch("Korosta eri vuodet värein?", default_value=True, label_after=True):
         color = 'Vuosi'
 
-
     # Then take more recent data to avoid loading too much data every time
     df = get_temperatures(new_start_dt, datetime.datetime.now())
     with chart_container(df, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
         fig = px.scatter(df, x='Keskilämpötila', y='Käyttöaste', color=color, trendline="lowess",
-                         trendline_scope="overall", opacity=0.5, height=700)
+                         trendline_scope="overall", opacity=0.5, height=700,
+                         hover_name=df.index.strftime("%d/%m/%Y %H:%M"), hover_data=['Tuulituotanto', 'Kapasiteetti'])
 
-        fig.update_layout(dict(yaxis_title='%', xaxis_autorange=True, yaxis_range=[-2, 100],
+        fig.update_layout(dict(yaxis_title='%', xaxis_autorange=True, yaxis_range=[-2, 102],
                                xaxis_title='Lämpötila', yaxis_tickformat=",.2r"))
         fig.data[-1].name = 'Sovite (LOWESS)'
         fig.data[-1].update(line_width=4, opacity=1)

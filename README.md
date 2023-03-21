@@ -15,8 +15,6 @@ Feel free to contact me on Twitter, and PRs are also welcome, if you have cool i
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/PekkoNiemi.svg?style=social&label=%20%40PekkoNiemi)](https://twitter.com/PekkoNiemi)
 
 # TODO:
-- [ ] Add possibility to go from time series data into a duration curve for most graphs
-- [ ] Add other production types?
 - [ ] Price data: Electricity prices, commodity prices, futures prices?
   - Licensing stuff...
-- [ ] Launch 🚀
+- [x] Launch 🚀
