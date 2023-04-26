@@ -67,7 +67,7 @@ st.subheader('Suomen tuotanto- ja kulutustilastoja')
 
 prod_dem_df = get_production_and_demand_df(start_date, end_date)
 aggregated_df = aggregate_data(prod_dem_df, aggregation_selection)
-tab1, tab2 = st.tabs(['Sähkön tuotanto ja kulutus', 'Tuotantorakenne'])
+tab1, tab2 = st.tabs(['Sähkön tuotanto ja kulutus', 'Suomen tuotantojakauma (3min)'])
 
 with tab1:
     # Using chart_container that allows user to look into the data or download it from separate tabs

@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_extras.buy_me_a_coffee import button
 from streamlit_extras.mention import mention
 
 import datetime
@@ -44,8 +43,6 @@ def get_general_layout(start=None):
     with st.sidebar:
         sidebar_contact_info()
 
-
-
     return start_date, end_date, aggregation_selection
 
 
@@ -70,7 +67,6 @@ def sidebar_contact_info():
         url="https://github.com/pekkon/EnergiaDataApp"
     )
     st.markdown('Datalähteenä [Fingridin avoin data](https://data.fingrid.fi)')
-    button("pekko", False, "Buy me a pizza", "🍕", width=250)
 
 
 @st.cache_data(show_spinner=False, max_entries=200)
