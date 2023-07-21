@@ -11,7 +11,7 @@ from src.fingridapi import get_data_from_FG_API_with_start_end
 import datetime
 
 
-@st.cache_data(show_spinner=False, max_entries=200)
+
 def get_wind_df(start, end):
     """
     Get the wind production and capacity values from Fingrid API between the start and end dates.
@@ -31,6 +31,7 @@ def get_wind_df(start, end):
     wind_df['Käyttöaste'] = wind_df['Tuulituotanto'] / wind_df['Kapasiteetti'] * 100
 
     return wind_df.round(1)
+
 
 @st.cache_data(show_spinner=False, max_entries=200)
 def get_temperatures(start_time, end_time):
@@ -57,8 +58,8 @@ st.set_page_config(
 )
 
 old_start_dt= datetime.datetime(2018, 1, 1, 0, 0, 0)
-old_end_dt = datetime.datetime(2023, 1, 1, 23, 59, 0)
-new_start_dt= datetime.datetime(2023, 2, 2, 0, 0, 0)
+old_end_dt = datetime.datetime(2023, 4, 23, 23, 59, 0)
+new_start_dt= datetime.datetime(2023, 4, 24, 0, 0, 0)
 
 start_date, end_date, aggregation_selection = get_general_layout(start=old_start_dt)
 st.header("Tuulen ja lämpötilan korrelaatio")
@@ -74,7 +75,8 @@ st.markdown("Tuulivoimatuotannon valitun aggregointitason mukaisen käyttöastee
 st.markdown("Voit halutessasi piilottaa kuvasta eri vuosien datoja tai sovitteen klikkaamalla niitä selitteestä. "
             "Tuplaklikkauksella voit valita tietyn vuoden ainoastaan näkyviin. ")
 st.markdown("Sovitteena kuvaajassa käytetään epälineaarista lokaalia regressiomallia "
-            "[LOWESS](https://en.wikipedia.org/wiki/Local_regression), mikä lasketaan koko valitulle ajanjaksolle.")
+            "[LOWESS](https://en.wikipedia.org/wiki/Local_regression), mikä lasketaan koko valitulle ajanjaksolle. "
+            "Kuvassa näytetään myös lämpötilan ja käyttöasteen histogrammit.")
 
 color = None
 
@@ -85,16 +87,19 @@ else:
     if st_toggle_switch("Korosta eri vuodet värein?", default_value=True, label_after=True):
         color = 'Vuosi'
 
-    # Then take more recent data to avoid loading too much data every time
-    df = get_temperatures(new_start_dt, datetime.datetime.now())
+    # Then take more recent data to avoid loading too much data every timer
+    df = get_temperatures(new_start_dt, datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time()))
     with chart_container(df, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
         fig = px.scatter(df, x='Keskilämpötila', y='Käyttöaste', color=color, trendline="lowess",
                          trendline_scope="overall", opacity=0.5, height=700,
-                         hover_name=df.index.strftime("%d/%m/%Y %H:%M"), hover_data=['Tuulituotanto', 'Kapasiteetti'])
+                         hover_name=df.index.strftime("%d/%m/%Y %H:%M"), hover_data=['Tuulituotanto', 'Kapasiteetti'],
+                         marginal_x="histogram", marginal_y="histogram")
 
         fig.update_layout(dict(yaxis_title='%', xaxis_autorange=True, yaxis_range=[-2, 102],
                                xaxis_title='Lämpötila', yaxis_tickformat=",.2r"))
-        fig.data[-1].name = 'Sovite (LOWESS)'
-        fig.data[-1].update(line_width=4, opacity=1)
-        fig.data[-1].showlegend = True
+        fig.data[-3].name = 'Sovite (LOWESS)'
+        fig.data[-3].update(line_width=4, opacity=1)
+        fig.data[-3].showlegend = True
+        # Remove trendline from the histograms
+        fig.data = [fig.data[i] for i in range(len(fig.data) - 2)]
         st.plotly_chart(fig, use_container_width=True)

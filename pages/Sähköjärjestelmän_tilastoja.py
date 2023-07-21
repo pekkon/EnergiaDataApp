@@ -43,7 +43,7 @@ def get_generations_df(start, end):
     generation_mapping = {'Ydinvoima': 188,
                           'Kaukolämmön yhteistuotanto': 201,
                           'Teollisuuden yhteistuotanto': 202,
-                          'Varavoimalaitokset ja pientuotanto': 205,
+                          'Muu tuotanto': 205,
                           'Tuulivoima': 181,
                           'Vesivoima': 191,
                           'Nettotuonti/-vienti': 194,
@@ -57,6 +57,9 @@ def get_generations_df(start, end):
         dfs.append(df)
 
     result = pd.concat(dfs, axis=1)
+    # Solar production is not available from API but can be calculated
+    solar = result['Tuotanto'] - result[result.columns[0:6]].sum(axis=1)
+    result.insert(5, 'Aurinkovoima', solar)
 
     return result
 
@@ -118,6 +121,13 @@ with tab2:
         fig = px.area(generation_df, x=generation_df.index, y=generation_df.columns[:-2])
         fig.add_trace(go.Scatter(x=generation_df.index, y=generation_df['Tuotanto'], mode='lines'))
         fig.add_trace(go.Scatter(x=generation_df.index, y=generation_df['Kulutus'], mode='lines'))
+        # Adjust coloring of lines
+        # CHP
+        fig.data[1]['line_color'] = "#000006"
+        # Solar
+        fig.data[5]['line_color'] = "#000007"
+        # Hydro
+        fig.data[6]['line_color'] = "#000002"
         fig.data[-1].update(dict(name='Kulutus', legendgroup=None, showlegend=True,
                             visible='legendonly'))
         fig.data[-2].update(dict(name='Tuotanto', legendgroup=None, showlegend=True,
