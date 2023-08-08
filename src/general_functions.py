@@ -56,12 +56,6 @@ def sidebar_contact_info():
         url="https://twitter.com/PekkoNiemi"
     )
     mention(
-        label="EnergiaBotti",
-        icon="twitter",
-        url="https://twitter.com/EnergiaBotti"
-    )
-
-    mention(
         label="EnergiaData-sovelluksen lähdekoodi",
         icon="github",
         url="https://github.com/pekkon/EnergiaDataApp"

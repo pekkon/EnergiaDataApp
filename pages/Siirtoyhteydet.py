@@ -82,7 +82,7 @@ with tab1:
 aggregated_rac_df = aggregate_data(rac_df, aggregation_selection)
 
 with tab2:
-    st.markdown("Suomen ja Ruotsin välinen ainoa vaihtosähköyhteys. "
+    st.markdown("Suomen ja Ruotsin välinen vaihtosähköyhteys. "
                 "Data sisältää myös Suomen ja Norjan välisen pienen vaihtosähköyhteyden siirron.")
     # Using chart_container that allows user to look into the data or download it from separate tabs
     with chart_container(aggregated_rac_df, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
@@ -105,7 +105,7 @@ with tab2:
 aggregated_fennoskan_df = aggregate_data(fennoskan_df, aggregation_selection)
 
 with tab3:
-    st.markdown("Fenno-Skan. Korkeajännitteisiä tasasähköyhteyksiä on tällä hetkellä kaksi.")
+    st.markdown("Fenno-Skan")
     with chart_container(aggregated_fennoskan_df, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
         # Demand and production metrics and graph
 
