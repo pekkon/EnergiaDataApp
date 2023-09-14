@@ -14,7 +14,6 @@ st.set_page_config(
 )
 
 
-
 st.cache_data(show_spinner=False, max_entries=200)
 def get_flows_and_capacities_df(start, end, flow_mapping):
     """
