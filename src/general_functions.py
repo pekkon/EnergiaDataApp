@@ -37,13 +37,13 @@ def get_general_layout(start=None):
                                          max_value=end, key='current_end_date')
     if start is None:
         st.session_state['current_start_date'] = start_date
-    aggregation_selection = st.sidebar.radio('Valitse aggregointitaso 🕑', ['Tunti', 'Päivä', 'Viikko', 'Kuukausi'])
+    aggregation_selection_selection = st.sidebar.radio('Valitse aggregointitaso 🕑', ['Tunti', 'Päivä', 'Viikko', 'Kuukausi'])
 
     # Add contact info and other information to the end of sidebar
     with st.sidebar:
         sidebar_contact_info()
 
-    return start_date, end_date, aggregation_selection
+    return start_date, end_date, aggregation_selection_selection
 
 
 def sidebar_contact_info():
@@ -64,21 +64,25 @@ def sidebar_contact_info():
 
 
 @st.cache_data(show_spinner=False, max_entries=200)
-def aggregate_data(df, aggregation):
+def aggregate_data(df, aggregation_selection, agg_level='mean'):
     """
-    Aggregates the given data based on user selected aggregation level
+    Aggregates the given data based on user selected aggregation_selection level
     :param df: dataframe
-    :param aggregation: aggregation level
+    :param aggregation_selection: aggregation_selection level
     :return: aggregated dataframe
     """
-    if aggregation == 'Päivä':
+    if aggregation_selection == 'Päivä':
         agg = 'D'
-    elif aggregation == 'Viikko':
+    elif aggregation_selection == 'Viikko':
         agg = 'W'
-    elif aggregation == 'Kuukausi':
+    elif aggregation_selection == 'Kuukausi':
         agg = 'M'
     else:
         agg = 'H'
-    return df.resample(agg).mean().round(1)
-
+    if agg_level == 'mean':
+        return df.resample(agg).mean().round(1)
+    elif agg_level == 'sum':
+        return df.resample(agg).sum().round(1)
+    else:
+        return df.resample(agg)
 

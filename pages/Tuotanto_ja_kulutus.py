@@ -8,6 +8,7 @@ from src.fingridapi import get_data_from_FG_API_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
 from fmiopendata.wfs import download_stored_query
 from datetime import datetime, time, timedelta
+from src.entsoapi import get_price_data
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
@@ -107,6 +108,17 @@ with tab1:
         fig2.data[1].showlegend = True
         fig2.update_layout(dict(yaxis_title='MW'), legend_title="Aikasarja")
         st.plotly_chart(fig2, use_container_width=True)
+
+    st.subheader("Kauppatase")
+    price_df = get_price_data(start_date, end_date, prod_dem_df.index)
+    trade_balance = prod_dem_df.copy()
+    trade_balance['Hinta'] = price_df.values
+    trade_balance['Kauppatase'] = trade_balance['Tase'] * trade_balance['Hinta']
+    aggregated_df = aggregate_data(trade_balance, aggregation_selection, 'sum')
+    st.metric("Kauppatase valitulla aikavälillä:", f"{round(aggregated_df['Kauppatase'].sum()/1000000, 1)} M€")
+    fig = px.line(aggregated_df, x=aggregated_df.index, y='Kauppatase',
+                  title="Suomen kauppatase")
+    st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
     st.subheader('Suomen tuotantorakenne')

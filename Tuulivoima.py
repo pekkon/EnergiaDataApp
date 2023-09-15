@@ -8,9 +8,12 @@ st.set_page_config(
 )
 from streamlit_extras.chart_container import chart_container
 import plotly.express as px
+import plotly.graph_objs as go
 import numpy as np
 from src.general_functions import get_general_layout, aggregate_data
 from src.fingridapi import get_data_from_FG_API_with_start_end
+from src.entsoapi import get_price_data
+import pandas as pd
 
 
 @st.cache_data(show_spinner=False, max_entries=200)
@@ -55,7 +58,8 @@ start_date, end_date, aggregation_selection = get_general_layout()
 
 st.subheader('Tuulivoiman tilastoja')
 # Create tabs for different visualizations
-tab1, tab2 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Tuulen osuus kulutuksesta'])
+tab1, tab2, tab3 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Tuulen osuus kulutuksesta',
+                            'Tuulivoiman saama hinta'])
 
 
 with tab1:
@@ -127,7 +131,7 @@ with tab2:
         fig2 = px.line(aggregated_demand, x=aggregated_demand.index, y=['Kulutus'])
         fig2.update_traces(yaxis="y2")
         subfig.add_traces(fig.data + fig2.data)
-        subfig.layout.xaxis.title = "Time"
+        subfig.layout.xaxis.title = "Aika"
         subfig.layout.yaxis.title = "%"
         subfig.layout.yaxis2.title = "MW"
         subfig.layout.yaxis2.overlaying = "y"
@@ -135,3 +139,46 @@ with tab2:
         subfig.layout.yaxis2.tickformat = ",.2r"
         subfig.for_each_trace(lambda t: t.update(line=dict(color=t.marker.color)))
         st.plotly_chart(subfig, use_container_width=True)
+
+with tab3:
+
+    price_df = get_price_data(start_date, end_date, wind_df.index)
+    st.subheader("Tuulituotannon saama hinta valitulla aikavälillä.")
+    st.markdown("Eli tuulituotannolla painotettu hinta jaetaan koko tuulituotannolla valitulla aikavälillä.")
+    wind_price_df = wind_df.copy()
+    wind_price_df['Hinta'] = price_df.values
+    wind_price_df['CP'] = wind_price_df['Hinta'] * wind_price_df['Tuulituotanto']
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        price_avg = price_df.mean()
+        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1)} €/MWh")
+    with col2:
+        cp_avg = wind_price_df['CP'].sum()/wind_price_df['Tuulituotanto'].sum()
+        st.metric("Tuulivoiman saama hinta:",
+                  f"{round(cp_avg, 1)} €/MWh")
+    with col3:
+        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1) } %")
+    #st.dataframe(wind_price_df)
+    monthly_averages = wind_price_df[['Tuulituotanto', 'Hinta', 'CP']].resample('M').agg({'Tuulituotanto': np.sum, 'Hinta': np.mean, 'CP': np.sum})
+    monthly_averages.index = monthly_averages.index.strftime('%Y-%m')
+    monthly_averages['Keskihinta €/MWh'] = round(monthly_averages['Hinta'] , 1)
+    monthly_averages['Tuulen saama hinta €/MWh'] = round(monthly_averages['CP'] / monthly_averages['Tuulituotanto'], 1)
+    monthly_averages['Suhde (%)'] = round(monthly_averages['Tuulen saama hinta €/MWh']/monthly_averages['Hinta'] * 100, 1)
+    st.write("Tuulivoiman kuukausittaisen saaman hinnan suhde kuukauden keskihintaan:")
+    subfig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
+    fig1 = px.bar(monthly_averages, y=['Keskihinta €/MWh', 'Tuulen saama hinta €/MWh'], barmode='group',
+                 height=400)
+    fig2 = px.line(x=monthly_averages.index, y=monthly_averages['Suhde (%)'])
+    fig2.update_traces(line_color='red', line_width=1, legendgroup=None, showlegend=True, name='Suhde (%)')
+    fig2.update_traces(yaxis="y2")
+    subfig.add_traces(fig1.data + fig2.data)
+    subfig.layout.xaxis.title = "Aika"
+    subfig.layout.yaxis.title = "€/MWh"
+    subfig.layout.yaxis2.title = "%"
+    subfig.update_layout(yaxis2=dict(range=[0,100]))
+    subfig.layout.yaxis2.overlaying = "y"
+    subfig.layout.yaxis2.tickmode = "sync"
+    subfig.layout.yaxis2.tickformat = ",.1f"
+    st.plotly_chart(subfig, use_container_width=True)
+
+    #st.plotly_chart(fig, use_container_width=True)
