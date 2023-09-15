@@ -6,3 +6,4 @@ plotly~=5.13.0
 numpy~=1.24.2
 statsmodels~=0.13.5
 fmiopendata~=0.4.1
+entsoe-py
