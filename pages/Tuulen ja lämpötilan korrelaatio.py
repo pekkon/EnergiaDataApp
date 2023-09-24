@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from src.general_functions import get_general_layout, aggregate_data
 from src.fmi_api import temperatures
-from src.fingridapi import get_data_from_FG_API_with_start_end
+from src.fingridapi import get_data_from_fg_api_with_start_end
 import datetime
 
 
@@ -20,10 +20,10 @@ def get_wind_df(start, end):
     :param end: end date
     :return: wind dataframe
     """
-    wind_df = get_data_from_FG_API_with_start_end(75, start, end)
+    wind_df = get_data_from_fg_api_with_start_end(75, start, end)
     wind_df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
 
-    wind_capacity = get_data_from_FG_API_with_start_end(268, start, end)
+    wind_capacity = get_data_from_fg_api_with_start_end(268, start, end)
     # Fixing issues in the API capacity (sometimes capacity is missing and API gives low value)
     wind_capacity.loc[wind_capacity['Value'] < wind_capacity['Value'].shift(-24), 'Value'] = np.NaN
     wind_capacity['Value'] = wind_capacity['Value'].ffill()

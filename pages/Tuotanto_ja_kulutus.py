@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 import plotly
 from streamlit_extras.chart_container import chart_container
-from src.fingridapi import get_data_from_FG_API_with_start_end
+from src.fingridapi import get_data_from_fg_api_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
 from fmiopendata.wfs import download_stored_query
 from datetime import datetime, time, timedelta
@@ -25,9 +25,9 @@ def get_production_and_demand_df(start, end):
     :param end: end date
     :return: production dataframe with demand values included
     """
-    demand_df = get_data_from_FG_API_with_start_end(124, start, end)
+    demand_df = get_data_from_fg_api_with_start_end(124, start, end)
     demand_df.rename({'Value': 'Kulutus'}, axis=1, inplace=True)
-    production_df = get_data_from_FG_API_with_start_end(74, start, end)
+    production_df = get_data_from_fg_api_with_start_end(74, start, end)
     production_df.rename({'Value': 'Tuotanto'}, axis=1, inplace=True)
     production_df['Kulutus'] = demand_df['Kulutus']
     production_df['Tase'] = production_df['Tuotanto'] - production_df['Kulutus']
@@ -53,7 +53,7 @@ def get_generations_df(start, end):
 
     dfs = []
     for key, value in generation_mapping.items():
-        df = get_data_from_FG_API_with_start_end(value, start, end)
+        df = get_data_from_fg_api_with_start_end(value, start, end)
         df.rename({'Value': key}, axis=1, inplace=True)
         dfs.append(df)
 
@@ -110,6 +110,7 @@ with tab1:
         st.plotly_chart(fig2, use_container_width=True)
 
     st.subheader("Kauppatase")
+    st.write("Kauppatase = Nettotase * Suomen aluehinta samana ajankohtana")
     price_df = get_price_data(start_date, end_date, prod_dem_df.index)
     trade_balance = prod_dem_df.copy()
     trade_balance['Hinta'] = price_df.values
@@ -129,6 +130,7 @@ with tab2:
     generation_df = get_generations_df(start_date, end_date)
     # Change net balance sign for visualization purposes
     generation_df['Nettotuonti/-vienti'] = generation_df['Nettotuonti/-vienti'] * -1
+    #aggregated_df = aggregate_data(generation_df, aggregation_selection)
     with chart_container(generation_df, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
         fig = px.area(generation_df, x=generation_df.index, y=generation_df.columns[:-2])
         fig.add_trace(go.Scatter(x=generation_df.index, y=generation_df['Tuotanto'], mode='lines'))

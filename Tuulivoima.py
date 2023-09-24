@@ -11,7 +11,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 import numpy as np
 from src.general_functions import get_general_layout, aggregate_data
-from src.fingridapi import get_data_from_FG_API_with_start_end
+from src.fingridapi import get_data_from_fg_api_with_start_end
 from src.entsoapi import get_price_data
 import pandas as pd
 
@@ -24,7 +24,7 @@ def get_demand_df(start, end):
     :param end: end date
     :return: demand dataframe
     """
-    demand_df = get_data_from_FG_API_with_start_end(124, start, end)
+    demand_df = get_data_from_fg_api_with_start_end(124, start, end)
     demand_df.rename({'Value': 'Kulutus'}, axis=1, inplace=True)
     return demand_df
 
@@ -38,10 +38,10 @@ def get_wind_df(start, end):
     :param end: end date
     :return: wind dataframe
     """
-    df = get_data_from_FG_API_with_start_end(75, start, end)
+    df = get_data_from_fg_api_with_start_end(75, start, end)
     df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
 
-    wind_capacity = get_data_from_FG_API_with_start_end(268, start, end)
+    wind_capacity = get_data_from_fg_api_with_start_end(268, start, end)
     # Fixing issues in the API capacity (sometimes capacity is missing and API gives low value)
     wind_capacity.loc[wind_capacity['Value'] < wind_capacity['Value'].shift(-24), 'Value'] = np.NaN
     df['Kapasiteetti'] = wind_capacity['Value']
@@ -144,7 +144,7 @@ with tab3:
 
     price_df = get_price_data(start_date, end_date, wind_df.index)
     st.subheader("Tuulituotannon saama hinta valitulla aikavälillä.")
-    st.markdown("Eli tuulituotannolla painotettu hinta jaetaan koko tuulituotannolla valitulla aikavälillä.")
+    st.markdown("Tuulituotannolla painotettu hinta jaettuna koko tuulituotannon summalla valitulla aikavälillä.")
     wind_price_df = wind_df.copy()
     wind_price_df['Hinta'] = price_df.values
     wind_price_df['CP'] = wind_price_df['Hinta'] * wind_price_df['Tuulituotanto']

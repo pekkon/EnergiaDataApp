@@ -8,8 +8,7 @@ Reads json-file given by Fingrid's open data API and converts it to list of time
 """
 
 
-
-def get_data_from_FG_API_with_start_end(variableid, start, end):
+def get_data_from_fg_api_with_start_end(variableid, start, end):
     headers = {'x-api-key': os.environ['FGAPIKEY']}
     start_str = start.strftime("%Y-%m-%dT") + "00:00:00+03:00"
     end_str = end.strftime("%Y-%m-%dT") + "23:59:00+03:00"

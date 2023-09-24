@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objs as go
 from streamlit_extras.chart_container import chart_container
-from src.fingridapi import get_data_from_FG_API_with_start_end
+from src.fingridapi import get_data_from_fg_api_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
 from datetime import datetime, time, timedelta
 st.set_page_config(
@@ -25,12 +25,12 @@ def get_flows_and_capacities_df(start, end, flow_mapping):
 
     dfs = []
     for key, value in flow_mapping.items():
-        df = get_data_from_FG_API_with_start_end(value, start, end)
+        df = get_data_from_fg_api_with_start_end(value, start, end)
         df.rename({'Value': key}, axis=1, inplace=True)
         dfs.append(df)
 
     result = pd.concat(dfs, axis=1)
-    # export is given expected to be positive always
+    # export is expected to be positive always
     result['Vientikapasiteetti'] = abs(result['Vientikapasiteetti'])
     result['Tuontikapasiteetti'] = result['Tuontikapasiteetti'] * -1
     return result
