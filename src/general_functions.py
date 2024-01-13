@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from streamlit_extras.mention import mention
 
 import datetime
@@ -74,9 +75,9 @@ def aggregate_data(df, aggregation_selection, agg_level='mean'):
     if aggregation_selection == 'Päivä':
         agg = 'D'
     elif aggregation_selection == 'Viikko':
-        agg = 'W'
+        agg = 'W-MON'
     elif aggregation_selection == 'Kuukausi':
-        agg = 'M'
+        agg = 'MS'
     else:
         agg = 'H'
     if agg_level == 'mean':
@@ -86,3 +87,13 @@ def aggregate_data(df, aggregation_selection, agg_level='mean'):
     else:
         return df.resample(agg)
 
+def check_previous_data(old_df, start_time):
+    # Identify the last date in the existing data
+    if not old_df.empty:
+        last_date_in_old_data = old_df.index.max()
+    else:
+        last_date_in_old_data = pd.to_datetime(start_time) - datetime.timedelta(days=1)
+
+    # Adjust start time for new data fetch
+    new_data_start_time = last_date_in_old_data + datetime.timedelta(days=1)
+    return new_data_start_time
