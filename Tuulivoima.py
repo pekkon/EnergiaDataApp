@@ -148,13 +148,13 @@ with tab3:
     col1, col2, col3 = st.columns(3)
     with col1:
         price_avg = price_df.mean()
-        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1).to_string()} €/MWh")
+        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1).values[0]} €/MWh")
     with col2:
         cp_avg = wind_price_df['CP'].sum()/wind_price_df['Tuulituotanto'].sum()
         st.metric("Tuulivoiman saama hinta:",
                   f"{round(cp_avg, 1)} €/MWh")
     with col3:
-        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1).to_string() } %")
+        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1).values[0] } %")
     monthly_averages = wind_price_df[['Tuulituotanto', 'Hinta', 'CP']].resample('M').agg({'Tuulituotanto': np.sum, 'Hinta': np.mean, 'CP': np.sum})
     monthly_averages.index = monthly_averages.index.strftime('%Y-%m')
     monthly_averages['Keskihinta €/MWh'] = round(monthly_averages['Hinta'] , 1)
