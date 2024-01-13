@@ -30,7 +30,10 @@ def get_finnish_price_data(start, end, _daterange=None):
         df.to_csv('./data/old_finnish_price_data.csv')
     else:
         df = old_df
-    return df
+    start = pd.to_datetime(start).tz_localize('Europe/Helsinki')
+    end = pd.to_datetime(end).tz_localize('Europe/Helsinki') + pd.to_timedelta(1, 'day')
+    print(df.loc[start:end].round(1))
+    return df.loc[start:end].round(1)
 
 @st.cache_data(show_spinner=False, max_entries=200)
 def get_area_price_data(start, end, area, _daterange=None):

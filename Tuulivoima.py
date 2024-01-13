@@ -1,19 +1,18 @@
 import plotly.subplots
 import streamlit as st
+from streamlit_extras.chart_container import chart_container
+import plotly.express as px
+import numpy as np
+from src.general_functions import get_general_layout, aggregate_data
+from src.fingridapi import get_data_from_fg_api_with_start_end
+from src.entsoapi import get_finnish_price_data
+
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
     layout='wide',
     initial_sidebar_state='expanded'
 )
-from streamlit_extras.chart_container import chart_container
-import plotly.express as px
-import plotly.graph_objs as go
-import numpy as np
-from src.general_functions import get_general_layout, aggregate_data
-from src.fingridapi import get_data_from_fg_api_with_start_end
-from src.entsoapi import get_price_data
-import pandas as pd
 
 
 @st.cache_data(show_spinner=False, max_entries=200)
@@ -38,6 +37,7 @@ def get_wind_df(start, end):
     :param end: end date
     :return: wind dataframe
     """
+
     df = get_data_from_fg_api_with_start_end(75, start, end)
     df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
 
@@ -61,13 +61,11 @@ st.subheader('Tuulivoiman tilastoja')
 tab1, tab2, tab3 = st.tabs(['Tuulivoimatuotanto ja -kapasiteetti', 'Tuulen osuus kulutuksesta',
                             'Tuulivoiman saama hinta'])
 
-
 with tab1:
     # tab1 will include visualization of wind production, capacity and
     # utilization rate during the user selected period.
     wind_df = get_wind_df(start_date, end_date)
     aggregated_wind = aggregate_data(wind_df, aggregation_selection)
-
     # Using chart_container that allows user to look into the data or download it from separate tabs
     with chart_container(aggregated_wind, ["Kuvaajat 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
         # Wind production metrics and graph
@@ -108,7 +106,6 @@ with tab1:
 
 with tab2:
     # tab2 could include other visualizations or statistics, TBC
-
     demand_df = get_demand_df(start_date, end_date)
     demand_df['Tuulituotannon osuus kulutuksesta'] = wind_df['Tuulituotanto']/demand_df['Kulutus'] * 100
     aggregated_demand = aggregate_data(demand_df, aggregation_selection)
@@ -141,24 +138,23 @@ with tab2:
         st.plotly_chart(subfig, use_container_width=True)
 
 with tab3:
-
-    price_df = get_price_data(start_date, end_date, wind_df.index)
+    price_df = get_finnish_price_data(start_date, end_date, wind_df.index)
     st.subheader("Tuulituotannon saama hinta valitulla aikavälillä.")
     st.markdown("Tuulituotannolla painotettu hinta jaettuna koko tuulituotannon summalla valitulla aikavälillä.")
     wind_price_df = wind_df.copy()
-    wind_price_df['Hinta'] = price_df.values
+    length = len(wind_price_df)
+    wind_price_df['Hinta'] = price_df.values[:length]
     wind_price_df['CP'] = wind_price_df['Hinta'] * wind_price_df['Tuulituotanto']
     col1, col2, col3 = st.columns(3)
     with col1:
         price_avg = price_df.mean()
-        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1)} €/MWh")
+        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1).to_string()} €/MWh")
     with col2:
         cp_avg = wind_price_df['CP'].sum()/wind_price_df['Tuulituotanto'].sum()
         st.metric("Tuulivoiman saama hinta:",
                   f"{round(cp_avg, 1)} €/MWh")
     with col3:
-        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1) } %")
-    #st.dataframe(wind_price_df)
+        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1).to_string() } %")
     monthly_averages = wind_price_df[['Tuulituotanto', 'Hinta', 'CP']].resample('M').agg({'Tuulituotanto': np.sum, 'Hinta': np.mean, 'CP': np.sum})
     monthly_averages.index = monthly_averages.index.strftime('%Y-%m')
     monthly_averages['Keskihinta €/MWh'] = round(monthly_averages['Hinta'] , 1)
@@ -180,5 +176,3 @@ with tab3:
     subfig.layout.yaxis2.tickmode = "sync"
     subfig.layout.yaxis2.tickformat = ",.1f"
     st.plotly_chart(subfig, use_container_width=True)
-
-    #st.plotly_chart(fig, use_container_width=True)

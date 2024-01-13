@@ -8,7 +8,7 @@ from src.fingridapi import get_data_from_fg_api_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
 from fmiopendata.wfs import download_stored_query
 from datetime import datetime, time, timedelta
-from src.entsoapi import get_price_data
+from src.entsoapi import get_finnish_price_data
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
@@ -31,6 +31,11 @@ def get_production_and_demand_df(start, end):
     production_df.rename({'Value': 'Tuotanto'}, axis=1, inplace=True)
     production_df['Kulutus'] = demand_df['Kulutus']
     production_df['Tase'] = production_df['Tuotanto'] - production_df['Kulutus']
+
+    # Due to issues with input data with strange timestamps, we need to resample the data
+    production_df = production_df.resample('H')
+    # Interpolate missing values linearly
+    production_df = production_df.interpolate()
     return production_df
 
 st.cache_data(show_spinner=False, max_entries=200)
@@ -90,7 +95,8 @@ with tab1:
         fig = px.line(aggregated_df, x=aggregated_df.index, y=['Tuotanto', 'Kulutus'],
                       title="Suomen tuotanto ja kulutus")
         fig.update_traces(line=dict(width=2.5))
-        fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja", yaxis_tickformat=",.2r"))
+        fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja", yaxis_tickformat=",.2r",
+                               yaxis_hoverformat=",.1f"))
         st.plotly_chart(fig, use_container_width=True)
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -111,10 +117,12 @@ with tab1:
 
     st.subheader("Kauppatase")
     st.write("Kauppatase = Nettotase * Suomen aluehinta samana ajankohtana")
-    price_df = get_price_data(start_date, end_date, prod_dem_df.index)
+    price_df = get_finnish_price_data(start_date, end_date, prod_dem_df.index)
     trade_balance = prod_dem_df.copy()
     trade_balance['Hinta'] = price_df.values
     trade_balance['Kauppatase'] = trade_balance['Tase'] * trade_balance['Hinta']
+    # Interpolate missing values linearly
+    result = trade_balance.interpolate()
     aggregated_df = aggregate_data(trade_balance, aggregation_selection, 'sum')
     st.metric("Kauppatase valitulla aikavälillä:", f"{round(aggregated_df['Kauppatase'].sum()/1000000, 1)} M€")
     fig = px.line(aggregated_df, x=aggregated_df.index, y='Kauppatase',
