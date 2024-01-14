@@ -90,8 +90,11 @@ old_start_dt= datetime.datetime(2018, 1, 1, 0, 0, 0)
 
 start_date, end_date, aggregation_selection = get_general_layout(start=old_start_dt)
 
-tab1, tab2, tab3 = st.tabs(['Tuulivoiman ja lämpötilan korrelaatio', 'Tuulivoiman ja sähkön hinnan korrelaatio',
-                            'Lämpötilan ja sähkön hinnan korrelaatio'])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(['Tuulivoiman ja lämpötilan korrelaatio',
+                                        'Tuulivoiman ja sähkön hinnan korrelaatio',
+                                        'Lämpötilan ja sähkön hinnan korrelaatio',
+                                        'Tuulivoiman jakauma vuorokauden tunneilla',
+                                        'Sähkön hinnan jakauma vuorokauden tunneilla'])
 with tab1:
     st.header("Tuulen ja lämpötilan korrelaatio")
 
@@ -181,7 +184,6 @@ with tab2:
 with tab3:
 
     st.header("Lämpötilan ja sähkön hinnan korrelaatio")
-    print(wind_df, df)
     wind_df.index = wind_df.index.tz_localize(None)
     temp_price = pd.merge_asof(wind_df, df, left_index=True, right_index=True)
     temp_price = aggregate_data(temp_price, aggregation_selection)
@@ -215,4 +217,56 @@ with tab3:
     fig.data[-3].showlegend = True
     # Remove trendline from the histograms
     fig.data = [fig.data[i] for i in range(len(fig.data) - 2)]
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab4:
+    st.header("Lämpötilan ja sähkön hinnan korrelaatio")
+    wind_df= get_wind_df(start_date, end_date)
+    wind_df.index = wind_df.index.tz_localize(None)
+    wind_df['Tunti'] = wind_df.index.hour.astype(str)
+    wind_df['Päivä'] = wind_df.index.date.astype(str)
+
+    st.markdown("Tuulivoimatuotannon käyttöasteen (tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) "
+                "jakauma vuorokauden eri tunneilla valitulla ajanjaksolla")
+    fig = px.density_heatmap(wind_df, z='Käyttöaste', y='Tunti', x='Päivä', histfunc='avg', range_color=[0, 100],
+                             color_continuous_scale=px.colors.diverging.balance)
+
+
+    if aggregation_selection == 'Viikko':
+        agg = 604800000
+    elif aggregation_selection == 'Kuukausi':
+        agg = 'M1'
+    else:
+        agg = 'D1'
+    fig.update_traces(xbins_size=agg)
+    fig.update_layout(dict(xaxis_autorange=True, legend_title="Aikasarja", xaxis_title='Aika'))
+    fig.layout['coloraxis']['colorbar']['title']['text'] = 'Käyttöaste %'
+    fig.data[0]['hovertemplate'] = 'Päivä=%{x}<br>Tunti=%{y}<br>Käyttöaste=%{z:.1f}%<extra></extra>'
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab5:
+    st.header("Sähkön hinnan jakauma vuorokauden tunneilla")
+
+    price_df.index = pd.to_datetime(price_df.index, utc=True)
+    price_df = pd.DataFrame(price_df)
+    price_df['Tunti'] = price_df.index.hour.astype(str)
+    price_df['Päivä'] = price_df.index.date.astype(str)
+    price_df.rename({'FI': 'Hinta'}, axis=1, inplace=True)
+    st.markdown("Tuulivoimatuotannon käyttöasteen (tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) "
+                "jakauma vuorokauden eri tunneilla valitulla ajanjaksolla")
+    range_of_price = st.slider("Valitse hintarajat kuvaajalle:", value=(0, 200), min_value=-100, max_value=500,
+                               step=50)
+    fig = px.density_heatmap(price_df, z='Hinta', y='Tunti', x='Päivä', histfunc='avg', height=700,
+                             range_color=list(range_of_price), color_continuous_scale=px.colors.diverging.balance)
+
+    if aggregation_selection == 'Viikko':
+        agg = 604800000
+    elif aggregation_selection == 'Kuukausi':
+        agg = 'M1'
+    else:
+        agg = 'D1'
+    fig.update_traces(xbins_size=agg)
+    fig.update_layout(dict(xaxis_autorange=True, legend_title="Aikasarja", xaxis_title='Aika'))
+    fig.layout['coloraxis']['colorbar']['title']['text'] = 'Hinta'
+    fig.data[0]['hovertemplate'] = 'Päivä=%{x}<br>Tunti=%{y}<br>Hinta=%{z:.1f}<extra></extra>'
     st.plotly_chart(fig, use_container_width=True)
