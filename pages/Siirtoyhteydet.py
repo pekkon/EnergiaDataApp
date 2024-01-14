@@ -86,7 +86,7 @@ with tab1:
         fig = px.violin(aggregated_estlink_df, y='Kaupallinen siirto', x=split_years,
                         title='Kaupallisen siirron jakauma')
         fig.update_layout(dict(xaxis_autorange=True, xaxis_tickformat=".n", yaxis_hoverformat=".1f"))
-        st.plotly_chart(fig, use_container_width=False)
+        st.plotly_chart(fig, use_container_width=True)
 
 aggregated_rac_df = aggregate_data(rac_df, aggregation_selection)
 aggregated_rac_df['Vuosi'] = aggregated_rac_df.index.year.astype(str)
@@ -117,7 +117,7 @@ with tab2:
             split_years = 'Vuosi'
         fig = px.violin(aggregated_rac_df, y='Kaupallinen siirto', x=split_years, title='Kaupallisen siirron jakauma')
         fig.update_layout(dict(xaxis_autorange=True, xaxis_tickformat=".n", yaxis_hoverformat=".1f"))
-        st.plotly_chart(fig, use_container_width=False)
+        st.plotly_chart(fig, use_container_width=True)
 
 aggregated_fennoskan_df = aggregate_data(fennoskan_df, aggregation_selection)
 aggregated_fennoskan_df['Vuosi'] = aggregated_fennoskan_df.index.year.astype(str)
@@ -147,7 +147,7 @@ with tab3:
         fig = px.violin(aggregated_fennoskan_df, y='Kaupallinen siirto', x=split_years,
                         title='Kaupallisen siirron jakauma')
         fig.update_layout(dict( xaxis_autorange=True, xaxis_tickformat=".n", yaxis_hoverformat=".1f"))
-        st.plotly_chart(fig, use_container_width=False)
+        st.plotly_chart(fig, use_container_width=True)
 
 
 
