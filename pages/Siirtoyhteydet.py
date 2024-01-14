@@ -75,9 +75,9 @@ with tab1:
             st.metric("Keskimääräinen siirto", f"{int(aggregated_estlink_df['Kaupallinen siirto'].mean() + 0.5)} MW")
         with col3:
             st.metric("Minimisiirto", f"{int(aggregated_estlink_df['Kaupallinen siirto'].min() + 0.5)} MW")
+        st.markdown("**Suomen ja Viron välinen sähkönsiirto**")
         fig = px.line(aggregated_estlink_df, x=aggregated_estlink_df.index,
-                      y=['Kaupallinen siirto', 'Vientikapasiteetti', 'Tuontikapasiteetti'],
-                      title="Suomen ja Viron välinen sähkönsiirto")
+                      y=['Kaupallinen siirto', 'Vientikapasiteetti', 'Tuontikapasiteetti'])
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
         fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
@@ -107,9 +107,9 @@ with tab2:
             st.metric("Keskimääräinen siirto", f"{int(aggregated_rac_df['Kaupallinen siirto'].mean() + 0.5)} MW")
         with col3:
             st.metric("Minimisiirto", f"{int(aggregated_rac_df['Kaupallinen siirto'].min() + 0.5)} MW")
+        st.markdown("**Suomen ja Pohjois-Ruotsin (+ Norjan) välinen sähkönsiirto**")
         fig = px.line(aggregated_rac_df, x=aggregated_rac_df.index,
-                      y=['Kaupallinen siirto', 'Vientikapasiteetti', 'Tuontikapasiteetti'],
-                      title="Suomen ja Pohjois-Ruotsin (+ Norjan) välinen sähkönsiirto")
+                      y=['Kaupallinen siirto', 'Vientikapasiteetti', 'Tuontikapasiteetti'])
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
         fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
@@ -137,9 +137,9 @@ with tab3:
             st.metric("Keskimääräinen siirto", f"{int(aggregated_fennoskan_df['Kaupallinen siirto'].mean() + 0.5)} MW")
         with col3:
             st.metric("Minimisiirto", f"{int(aggregated_fennoskan_df['Kaupallinen siirto'].min() + 0.5)} MW")
+        st.markdown("**Suomen ja Keski-Ruotsin välinen sähkönsiirto**")
         fig = px.line(aggregated_fennoskan_df, x=aggregated_fennoskan_df.index,
-                      y=['Kaupallinen siirto', 'Vientikapasiteetti', 'Tuontikapasiteetti'],
-                      title="Suomen ja Keski-Ruotsin välinen sähkönsiirto")
+                      y=['Kaupallinen siirto', 'Vientikapasiteetti', 'Tuontikapasiteetti'])
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
         fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))

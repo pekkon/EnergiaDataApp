@@ -76,9 +76,9 @@ with tab1:
             st.metric("Keskimääräinen tuotanto", f"{round(aggregated_wind['Tuulituotanto'].mean(), 1)} MW")
         with col3:
             st.metric("Minimituotanto", f"{round(aggregated_wind['Tuulituotanto'].min(), 1)} MW")
+        st.markdown("**Tuulivoimatuotanto ja asennettu kapasiteetti**")
         fig = px.scatter(aggregated_wind, x=aggregated_wind.index, y=['Tuulituotanto', 'Kapasiteetti'],
-                        title="Tuulivoimatuotanto ja asennettu kapasiteetti", trendline='expanding',
-                        trendline_options=dict(function="max"))
+                         trendline='expanding', trendline_options=dict(function="max"))
         fig.update_traces(mode='lines')
         fig.data[1].update(dict(name='Tuulivoimatuotannon ennätys', legendgroup=None, showlegend=True,
                                 visible='legendonly', line_color='#FF4B4B'))
@@ -97,9 +97,8 @@ with tab1:
             st.metric("Keskimääräinen käyttöaste", f"{round(aggregated_wind['Käyttöaste'].mean(), 1)} %")
         with col3:
             st.metric("Minimikäyttöaste", f"{aggregated_wind['Käyttöaste'].min()} %")
-
-        fig = px.line(aggregated_wind, x=aggregated_wind.index, y=['Käyttöaste'],
-                      title="Tuulivoimatuotannon käyttöaste (eli tuotanto/kapasiteetti)")
+        st.markdown("**Tuulivoimatuotannon käyttöaste (eli tuotanto/kapasiteetti)**")
+        fig = px.line(aggregated_wind, x=aggregated_wind.index, y=['Käyttöaste'])
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(legend_title="Aikasarja", yaxis=dict(title='%', range=[0, 100]))
         fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
@@ -164,7 +163,7 @@ with tab3:
     monthly_averages['Keskihinta €/MWh'] = round(monthly_averages['Hinta'] , 1)
     monthly_averages['Tuulen saama hinta €/MWh'] = round(monthly_averages['CP'] / monthly_averages['Tuulituotanto'], 1)
     monthly_averages['Suhde (%)'] = round(monthly_averages['Tuulen saama hinta €/MWh']/monthly_averages['Hinta'] * 100, 1)
-    st.write("Tuulivoiman kuukausittaisen saaman hinnan suhde kuukauden keskihintaan:")
+    st.markdown("**Tuulivoiman kuukausittaisen saaman hinnan suhde kuukauden keskihintaan:**")
     subfig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
     fig1 = px.bar(monthly_averages, y=['Keskihinta €/MWh', 'Tuulen saama hinta €/MWh'], barmode='group',
                  height=400)

@@ -92,8 +92,8 @@ with tab1:
         with col3:
             st.metric("Minimikulutus", f"{int(aggregated_df['Kulutus'].min() + 0.5)} MW")
             st.metric("Minimituotanto", f"{int(aggregated_df['Tuotanto'].min() + 0.5)} MW")
-        fig = px.line(aggregated_df, x=aggregated_df.index, y=['Tuotanto', 'Kulutus'],
-                      title="Suomen tuotanto ja kulutus")
+        st.markdown("**Suomen tuotanto ja kulutus**")
+        fig = px.line(aggregated_df, x=aggregated_df.index, y=['Tuotanto', 'Kulutus'])
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja", yaxis_tickformat=".2r",
                                yaxis_hoverformat=".1f"))
@@ -106,9 +106,9 @@ with tab1:
             st.metric("Keskimääräinen nettotase", f"{int(aggregated_df['Tase'].mean() + 0.5)} MW")
         with col3:
             st.metric("Miniminettotase", f"{int(aggregated_df['Tase'].min() + 0.5)} MW")
-
-        fig2 = px.scatter(aggregated_df, x=aggregated_df.index, y=['Tase'],
-                      title="Suomen nettovienti(+)/-tuonti(-)", trendline="ols", trendline_color_override='#0068C9')
+        st.markdown("**Suomen nettovienti(+)/-tuonti(-)**")
+        fig2 = px.scatter(aggregated_df, x=aggregated_df.index, y=['Tase'], trendline="ols",
+                          trendline_color_override='#0068C9')
         fig2.update_traces(mode='lines')
         fig2.update_traces(line=dict(width=2.5))
         fig2.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
@@ -127,8 +127,7 @@ with tab1:
     result = trade_balance.interpolate()
     aggregated_df = aggregate_data(trade_balance, aggregation_selection, 'sum')
     st.metric("Kauppatase valitulla aikavälillä:", f"{round(aggregated_df['Kauppatase'].sum()/1000000, 1)} M€")
-    fig = px.line(aggregated_df, x=aggregated_df.index, y='Kauppatase',
-                  title="Suomen kauppatase")
+    fig = px.line(aggregated_df, x=aggregated_df.index, y='Kauppatase')
     st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
@@ -158,7 +157,7 @@ with tab2:
                                  visible='legendonly', line_color='#FF4B4B'))
         fig.data[-3].update(dict(visible='legendonly'))
         fig.update_layout(legend_title="Tuotantomuoto", yaxis=dict(title='MW'))
-        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
 
 
