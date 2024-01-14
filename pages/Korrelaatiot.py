@@ -133,6 +133,7 @@ with tab1:
 
             fig.update_layout(dict(yaxis_title='%', xaxis_autorange=True, yaxis_range=[-2, 102],
                                    xaxis_title='Lämpötila', yaxis_tickformat=".2r", yaxis_hoverformat=".1f"))
+            fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             fig.data[-3].name = 'Sovite (LOWESS)'
             fig.data[-3].update(line_width=4, opacity=1)
             fig.data[-3].showlegend = True
@@ -174,6 +175,7 @@ with tab2:
 
     fig.update_layout(dict(yaxis_title='Hinta €/MWh', yaxis_autorange=True, xaxis_range=[-1, 101],
                            xaxis_title='%', xaxis_tickformat=".2r", xaxis_hoverformat=".1f"))
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     fig.data[-3].name = 'Sovite (LOWESS)'
     fig.data[-3].update(line_width=4, opacity=1)
     fig.data[-3].showlegend = True
@@ -212,6 +214,7 @@ with tab3:
 
     fig.update_layout(dict(yaxis_title='Hinta €/MWh', xaxis_autorange=True,
                            xaxis_title='Lämpötila', yaxis_tickformat=",.1r", yaxis_hoverformat=",.1f"))
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     fig.data[-3].name = 'Sovite (LOWESS)'
     fig.data[-3].update(line_width=4, opacity=1)
     fig.data[-3].showlegend = True
@@ -228,8 +231,10 @@ with tab4:
 
     st.markdown("Tuulivoimatuotannon käyttöasteen (tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) "
                 "jakauma vuorokauden eri tunneilla valitulla ajanjaksolla")
-    fig = px.density_heatmap(wind_df, z='Käyttöaste', y='Tunti', x='Päivä', histfunc='avg', range_color=[0, 100],
-                             color_continuous_scale=px.colors.diverging.balance, height=600)
+    range_of_prod = st.slider("Valitse käyttöasterajat kuvaajalle:", value=(0, 100), min_value=0, max_value=100,
+                               step=5)
+    fig = px.density_heatmap(wind_df, z='Käyttöaste', y='Tunti', x='Päivä', histfunc='avg',height=600,
+                             color_continuous_scale=px.colors.diverging.balance, range_color=list(range_of_prod))
 
 
     if aggregation_selection == 'Viikko':
@@ -240,6 +245,7 @@ with tab4:
         agg = 'D1'
     fig.update_traces(xbins_size=agg)
     fig.update_layout(dict(xaxis_autorange=True, legend_title="Aikasarja", xaxis_title='Aika'))
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     fig.layout['coloraxis']['colorbar']['title']['text'] = 'Käyttöaste %'
     fig.data[0]['hovertemplate'] = 'Päivä=%{x}<br>Tunti=%{y}<br>Käyttöaste=%{z:.1f}%<extra></extra>'
     st.plotly_chart(fig, use_container_width=True)
@@ -265,6 +271,7 @@ with tab5:
         agg = 'D1'
     fig.update_traces(xbins_size=agg)
     fig.update_layout(dict(xaxis_autorange=True, legend_title="Aikasarja", xaxis_title='Aika'))
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     fig.layout['coloraxis']['colorbar']['title']['text'] = 'Hinta'
     fig.data[0]['hovertemplate'] = 'Päivä=%{x}<br>Tunti=%{y}<br>Hinta=%{z:.1f}<extra></extra>'
     st.plotly_chart(fig, use_container_width=True)

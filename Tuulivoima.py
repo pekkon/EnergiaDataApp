@@ -86,6 +86,7 @@ with tab1:
         fig.data = fig.data[:-1]
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW'), legend_title="Aikasarja")
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
 
         # Utilization rate metrics and graph
@@ -101,6 +102,7 @@ with tab1:
                       title="Tuulivoimatuotannon käyttöaste (eli tuotanto/kapasiteetti)")
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(legend_title="Aikasarja", yaxis=dict(title='%', range=[0, 100]))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -136,6 +138,7 @@ with tab2:
         subfig.layout.yaxis2.tickformat = ".2r"
         subfig.layout.yaxis2.hoverformat = ".1f"
         subfig.for_each_trace(lambda t: t.update(line=dict(color=t.marker.color)))
+        subfig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(subfig, use_container_width=True)
 
 with tab3:
@@ -176,4 +179,5 @@ with tab3:
     subfig.layout.yaxis2.overlaying = "y"
     subfig.layout.yaxis2.tickmode = "sync"
     subfig.layout.yaxis2.tickformat = ".1f"
+    subfig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(subfig, use_container_width=True)

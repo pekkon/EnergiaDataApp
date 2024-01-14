@@ -80,6 +80,7 @@ with tab1:
                       title="Suomen ja Viron välinen sähkönsiirto")
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
         if st_toggle_switch("Laske jakauma eri vuosille?", default_value=True, label_after=True, key="esttab"):
             split_years = 'Vuosi'
@@ -111,6 +112,7 @@ with tab2:
                       title="Suomen ja Pohjois-Ruotsin (+ Norjan) välinen sähkönsiirto")
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
 
         if st_toggle_switch("Laske jakauma eri vuosille?", default_value=True, label_after=True, key="ractab"):
@@ -140,6 +142,7 @@ with tab3:
                       title="Suomen ja Keski-Ruotsin välinen sähkönsiirto")
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
 
         if st_toggle_switch("Laske jakauma eri vuosille?", default_value=True, label_after=True, key="fstab"):

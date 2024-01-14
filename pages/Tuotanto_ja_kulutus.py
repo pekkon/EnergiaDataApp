@@ -97,6 +97,7 @@ with tab1:
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja", yaxis_tickformat=".2r",
                                yaxis_hoverformat=".1f"))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -110,6 +111,7 @@ with tab1:
                       title="Suomen nettovienti(+)/-tuonti(-)", trendline="ols", trendline_color_override='#0068C9')
         fig2.update_traces(mode='lines')
         fig2.update_traces(line=dict(width=2.5))
+        fig2.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         fig2.data[1].name = 'Trendi'
         fig2.data[1].showlegend = True
         fig2.update_layout(dict(yaxis_title='MW'), legend_title="Aikasarja")
@@ -117,9 +119,9 @@ with tab1:
 
     st.subheader("Kauppatase")
     st.write("Kauppatase = Nettotase * Suomen aluehinta samana ajankohtana")
-    price_df = get_finnish_price_data(start_date, end_date, prod_dem_df.index)
+    price_df = get_finnish_price_data(start_date, end_date)
     trade_balance = prod_dem_df.copy()
-    trade_balance['Hinta'] = price_df.values
+    trade_balance['Hinta'] = price_df.values[:len(trade_balance)]
     trade_balance['Kauppatase'] = trade_balance['Tase'] * trade_balance['Hinta']
     # Interpolate missing values linearly
     result = trade_balance.interpolate()
@@ -156,6 +158,7 @@ with tab2:
                                  visible='legendonly', line_color='#FF4B4B'))
         fig.data[-3].update(dict(visible='legendonly'))
         fig.update_layout(legend_title="Tuotantomuoto", yaxis=dict(title='MW'))
+        fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig, use_container_width=True)
 
 
