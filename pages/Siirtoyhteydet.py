@@ -3,9 +3,11 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objs as go
 from streamlit_extras.chart_container import chart_container
+from streamlit_extras.toggle_switch import st_toggle_switch
 from src.fingridapi import get_data_from_fg_api_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
 from datetime import datetime, time, timedelta
+
 st.set_page_config(
     page_title="EnergiaData - Suomen siirtoyhteyksien tilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
@@ -57,6 +59,8 @@ estlink_df = get_flows_and_capacities_df(start_date, end_date, estlink_map)
 fennoskan_df = get_flows_and_capacities_df(start_date, end_date, fennoskan_map)
 rac_df = get_flows_and_capacities_df(start_date, end_date, rac_map)
 aggregated_estlink_df = aggregate_data(estlink_df, aggregation_selection)
+aggregated_estlink_df['Vuosi'] = aggregated_estlink_df.index.year.astype(str)
+split_years = None
 tab1, tab2, tab3 = st.tabs(['Suomi - Viro', 'Suomi - Pohjois-Ruotsi (SE1)', 'Suomi - Keski-Ruotsi (SE3)'])
 
 with tab1:
@@ -77,8 +81,16 @@ with tab1:
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
         st.plotly_chart(fig, use_container_width=True)
+        if st_toggle_switch("Laske jakauma eri vuosille?", default_value=True, label_after=True, key="esttab"):
+            split_years = 'Vuosi'
+        fig = px.violin(aggregated_estlink_df, y='Kaupallinen siirto', x=split_years,
+                        title='Kaupallisen siirron jakauma')
+        fig.update_layout(dict(xaxis_autorange=True, xaxis_tickformat=".n", yaxis_hoverformat=".1f"))
+        st.plotly_chart(fig, use_container_width=False)
 
 aggregated_rac_df = aggregate_data(rac_df, aggregation_selection)
+aggregated_rac_df['Vuosi'] = aggregated_rac_df.index.year.astype(str)
+split_years = None
 
 with tab2:
     st.markdown("Suomen ja Ruotsin välinen vaihtosähköyhteys. "
@@ -101,7 +113,15 @@ with tab2:
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
         st.plotly_chart(fig, use_container_width=True)
 
+        if st_toggle_switch("Laske jakauma eri vuosille?", default_value=True, label_after=True, key="ractab"):
+            split_years = 'Vuosi'
+        fig = px.violin(aggregated_rac_df, y='Kaupallinen siirto', x=split_years, title='Kaupallisen siirron jakauma')
+        fig.update_layout(dict(xaxis_autorange=True, xaxis_tickformat=".n", yaxis_hoverformat=".1f"))
+        st.plotly_chart(fig, use_container_width=False)
+
 aggregated_fennoskan_df = aggregate_data(fennoskan_df, aggregation_selection)
+aggregated_fennoskan_df['Vuosi'] = aggregated_fennoskan_df.index.year.astype(str)
+split_years = None
 
 with tab3:
     st.markdown("Fenno-Skan")
@@ -121,6 +141,13 @@ with tab3:
         fig.update_traces(line=dict(width=2.5))
         fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja"))
         st.plotly_chart(fig, use_container_width=True)
+
+        if st_toggle_switch("Laske jakauma eri vuosille?", default_value=True, label_after=True, key="fstab"):
+            split_years = 'Vuosi'
+        fig = px.violin(aggregated_fennoskan_df, y='Kaupallinen siirto', x=split_years,
+                        title='Kaupallisen siirron jakauma')
+        fig.update_layout(dict( xaxis_autorange=True, xaxis_tickformat=".n", yaxis_hoverformat=".1f"))
+        st.plotly_chart(fig, use_container_width=False)
 
 
 

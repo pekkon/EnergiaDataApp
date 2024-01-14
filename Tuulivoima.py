@@ -133,12 +133,13 @@ with tab2:
         subfig.layout.yaxis2.title = "MW"
         subfig.layout.yaxis2.overlaying = "y"
         subfig.layout.yaxis2.tickmode = "sync"
-        subfig.layout.yaxis2.tickformat = ",.2r"
+        subfig.layout.yaxis2.tickformat = ".2r"
+        subfig.layout.yaxis2.hoverformat = ".1f"
         subfig.for_each_trace(lambda t: t.update(line=dict(color=t.marker.color)))
         st.plotly_chart(subfig, use_container_width=True)
 
 with tab3:
-    price_df = get_finnish_price_data(start_date, end_date, wind_df.index)
+    price_df = get_finnish_price_data(start_date, end_date)
     st.subheader("Tuulituotannon saama hinta valitulla aikavälillä.")
     st.markdown("Tuulituotannolla painotettu hinta jaettuna koko tuulituotannon summalla valitulla aikavälillä.")
     wind_price_df = wind_df.copy()
@@ -148,13 +149,13 @@ with tab3:
     col1, col2, col3 = st.columns(3)
     with col1:
         price_avg = price_df.mean()
-        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1).values[0]} €/MWh")
+        st.metric("Sähkön keskihinta:", f"{round(price_avg, 1)} €/MWh")
     with col2:
         cp_avg = wind_price_df['CP'].sum()/wind_price_df['Tuulituotanto'].sum()
         st.metric("Tuulivoiman saama hinta:",
                   f"{round(cp_avg, 1)} €/MWh")
     with col3:
-        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1).values[0] } %")
+        st.metric("Suhde keskihintaan:", f"{round(cp_avg/price_avg * 100, 1) } %")
     monthly_averages = wind_price_df[['Tuulituotanto', 'Hinta', 'CP']].resample('M').agg({'Tuulituotanto': np.sum, 'Hinta': np.mean, 'CP': np.sum})
     monthly_averages.index = monthly_averages.index.strftime('%Y-%m')
     monthly_averages['Keskihinta €/MWh'] = round(monthly_averages['Hinta'] , 1)
@@ -174,5 +175,5 @@ with tab3:
     subfig.update_layout(yaxis2=dict(range=[0,100]))
     subfig.layout.yaxis2.overlaying = "y"
     subfig.layout.yaxis2.tickmode = "sync"
-    subfig.layout.yaxis2.tickformat = ",.1f"
+    subfig.layout.yaxis2.tickformat = ".1f"
     st.plotly_chart(subfig, use_container_width=True)

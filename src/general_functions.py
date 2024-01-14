@@ -92,8 +92,8 @@ def check_previous_data(old_df, start_time):
     if not old_df.empty:
         last_date_in_old_data = old_df.index.max()
     else:
-        last_date_in_old_data = pd.to_datetime(start_time) - datetime.timedelta(days=1)
+        last_date_in_old_data = pd.to_datetime(start_time) - datetime.timedelta(hours=1)
 
     # Adjust start time for new data fetch
-    new_data_start_time = last_date_in_old_data + datetime.timedelta(days=1)
+    new_data_start_time = last_date_in_old_data + datetime.timedelta(hours=1)
     return new_data_start_time

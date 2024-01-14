@@ -95,8 +95,8 @@ with tab1:
         fig = px.line(aggregated_df, x=aggregated_df.index, y=['Tuotanto', 'Kulutus'],
                       title="Suomen tuotanto ja kulutus")
         fig.update_traces(line=dict(width=2.5))
-        fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja", yaxis_tickformat=",.2r",
-                               yaxis_hoverformat=",.1f"))
+        fig.update_layout(dict(yaxis_title='MW', legend_title="Aikasarja", yaxis_tickformat=".2r",
+                               yaxis_hoverformat=".1f"))
         st.plotly_chart(fig, use_container_width=True)
         col1, col2, col3 = st.columns(3)
         with col1:
