@@ -229,7 +229,7 @@ with tab4:
     st.markdown("Tuulivoimatuotannon käyttöasteen (tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) "
                 "jakauma vuorokauden eri tunneilla valitulla ajanjaksolla")
     fig = px.density_heatmap(wind_df, z='Käyttöaste', y='Tunti', x='Päivä', histfunc='avg', range_color=[0, 100],
-                             color_continuous_scale=px.colors.diverging.balance)
+                             color_continuous_scale=px.colors.diverging.balance, height=600)
 
 
     if aggregation_selection == 'Viikko':
@@ -252,11 +252,9 @@ with tab5:
     price_df['Tunti'] = price_df.index.hour.astype(str)
     price_df['Päivä'] = price_df.index.date.astype(str)
     price_df.rename({'FI': 'Hinta'}, axis=1, inplace=True)
-    st.markdown("Tuulivoimatuotannon käyttöasteen (tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) "
-                "jakauma vuorokauden eri tunneilla valitulla ajanjaksolla")
     range_of_price = st.slider("Valitse hintarajat kuvaajalle:", value=(0, 200), min_value=-100, max_value=500,
-                               step=50)
-    fig = px.density_heatmap(price_df, z='Hinta', y='Tunti', x='Päivä', histfunc='avg', height=700,
+                               step=25)
+    fig = px.density_heatmap(price_df, z='Hinta', y='Tunti', x='Päivä', histfunc='avg', height=600,
                              range_color=list(range_of_price), color_continuous_scale=px.colors.diverging.balance)
 
     if aggregation_selection == 'Viikko':
