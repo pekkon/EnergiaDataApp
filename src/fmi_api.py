@@ -33,6 +33,7 @@ def get_temp(id, start_str, end_str):
 def temperatures(start_time, end_time):
 
     curr_time = start_time
+    end_time = pd.to_datetime(end_time)
     monday1 = (curr_time - datetime.timedelta(days=curr_time.weekday()))
     monday2 = (end_time - datetime.timedelta(days=end_time.weekday()))
 

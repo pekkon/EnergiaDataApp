@@ -70,8 +70,8 @@ def get_temperatures(start_time, end_time):
     temperature_df.to_csv('./data/old_temperatures.csv')
     wind_df = get_wind_df(start_date, end_date)
     temperature_df['Keskilämpötila'] = temperature_df.mean(axis=1)
-    filtered_temp_df = temperature_df.loc[start_date:end_date].iloc[:-1]
-    filtered_wind_df = wind_df.loc[start_date:end_date].iloc[:-1]
+    filtered_temp_df = temperature_df.loc[start_date:end_date].iloc[:-1].drop_duplicates()
+    filtered_wind_df = wind_df.loc[start_date:end_date].iloc[:-1].drop_duplicates()
     filtered_wind_df.index = filtered_wind_df.index.tz_localize(None)
     print(filtered_wind_df.tail())
     print(filtered_temp_df.tail())
