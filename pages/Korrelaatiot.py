@@ -30,19 +30,28 @@ def get_wind_df(start, end):
 
         new_df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
 
-        wind_capacity = get_data_from_fg_api_with_start_end(268, start, end)
+        wind_capacity = get_data_from_fg_api_with_start_end(268, new_start_time, end)
         # Fixing issues in the API capacity (sometimes capacity is missing and API gives low value)
         wind_capacity.loc[wind_capacity['Value'] < wind_capacity['Value'].shift(-24), 'Value'] = np.NaN
         new_df['Kapasiteetti'] = wind_capacity['Value']
         # Due to issues with input data with strange timestamps, we need to resample the data
         new_df = new_df.resample('H')
         # Interpolate missing values linearly
-        new_df = new_df.interpolate()
+        new_df = new_df.interpolate('time')
         new_df = pd.concat([old_df, new_df])
-        new_df.drop_duplicates().to_csv('./data/old_wind_corr_data.csv')
+        duplicates = new_df.index.duplicated()
+        if duplicates.any():
+            print("There are duplicate index values.")
+
+            # Option 1: Remove duplicates
+            df_no_duplicates = new_df[~duplicates]
+
+            # Option 2: Aggregate duplicates (e.g., by taking the mean)
+            new_df = new_df.groupby(new_df.index).last()
+        new_df.to_csv('./data/old_wind_corr_data.csv')
 
     else:
-        new_df = old_df.drop_duplicates()
+        new_df = old_df
     new_df['Käyttöaste'] = new_df['Tuulituotanto'] / new_df['Kapasiteetti'] * 100
     # Filter wind data based on the selected date if we have more data already downloaded
     start = pd.to_datetime(start).tz_localize(None)
@@ -71,8 +80,6 @@ def get_temperatures(start_time, end_time):
     filtered_temp_df = temperature_df.loc[start_date:end_date].iloc[:-1]
     filtered_wind_df = wind_df.loc[start_date:end_date].iloc[:-1]
     filtered_wind_df.index = filtered_wind_df.index.tz_localize(None)
-    print(filtered_wind_df.tail())
-    print(filtered_temp_df.tail())
     filtered_df = pd.merge_asof(filtered_temp_df, filtered_wind_df, left_index=True, right_index=True)
     return filtered_df[pd.to_datetime(start_time):pd.to_datetime(end_time)]
 
@@ -91,8 +98,8 @@ start_date, end_date, aggregation_selection = get_general_layout(start=old_start
 tab1, tab2, tab3, tab4, tab5 = st.tabs(['Tuulivoiman ja lämpötilan korrelaatio',
                                         'Tuulivoiman ja sähkön hinnan korrelaatio',
                                         'Lämpötilan ja sähkön hinnan korrelaatio',
-                                        'Tuulivoiman jakauma vuorokauden tunneilla',
-                                        'Sähkön hinnan jakauma vuorokauden tunneilla'])
+                                        'Tuulivoiman lämpökartta vuorokauden tunneilla',
+                                        'Sähkön hinnan lämpökartta vuorokauden tunneilla'])
 with tab1:
     st.header("Tuulen ja lämpötilan korrelaatio")
 
@@ -141,15 +148,15 @@ with tab1:
 with tab2:
 
     st.header("Tuulen ja sähkön hinnan korrelaatio")
-    wind_df = get_wind_df(start_date, end_date)
 
     price_df = get_finnish_price_data(start_date, end_date + datetime.timedelta(days=1))
-    length = len(wind_df)
-    wind_df['Hinta'] = price_df.values[:length]
 
-    agg_wind = aggregate_data(wind_df, aggregation_selection)
+    df.index = df.index.tz_localize(None)
+    price_df.index = pd.to_datetime(price_df.index, utc=True).tz_localize(None)
+    df = pd.merge_asof(df, price_df, left_index=True, right_index=True)
+    df = df.rename({'FI': 'Hinta'}, axis=1)
+    agg_wind = aggregate_data(df, aggregation_selection)
     agg_wind['Vuosi'] = agg_wind.index.year.astype(str)
-
     st.markdown("Tuulivoimatuotannon valitun aggregointitason mukaisen käyttöasteen "
                 "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) sekä sähkön hinnan välinen xy-kuvaaja "
                 "kuvaa tuulen ja sähkön hinnan korrelaatiota.")
@@ -184,9 +191,9 @@ with tab2:
 with tab3:
 
     st.header("Lämpötilan ja sähkön hinnan korrelaatio")
-    wind_df.index = wind_df.index.tz_localize(None)
-    temp_price = pd.merge_asof(wind_df, df, left_index=True, right_index=True)
-    temp_price = aggregate_data(temp_price, aggregation_selection)
+
+
+    temp_price = aggregate_data(df, aggregation_selection)
     temp_price['Vuosi'] = temp_price.index.year.astype(str)
 
 
@@ -221,17 +228,15 @@ with tab3:
     st.plotly_chart(fig, use_container_width=True)
 
 with tab4:
-    st.header("Lämpötilan ja sähkön hinnan korrelaatio")
-    wind_df= get_wind_df(start_date, end_date)
-    wind_df.index = wind_df.index.tz_localize(None)
-    wind_df['Tunti'] = wind_df.index.hour.astype(str)
-    wind_df['Päivä'] = wind_df.index.date.astype(str)
+    st.header("Tuulivoiman lämpökartta vuorokauden tunneilla")
+    st.markdown("Lämpökartta kuvaa valitun aikaikkunan sisällä laskettua keskimääräistä tuulivoiman käyttöastetta.")
 
-    st.markdown("Tuulivoimatuotannon käyttöasteen (tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) "
-                "jakauma vuorokauden eri tunneilla valitulla ajanjaksolla")
+    df['Tunti'] = df.index.hour.astype(str)
+    df['Päivä'] = df.index.date.astype(str)
+
     range_of_prod = st.slider("Valitse käyttöasterajat kuvaajalle:", value=(0, 100), min_value=0, max_value=100,
                                step=5)
-    fig = px.density_heatmap(wind_df, z='Käyttöaste', y='Tunti', x='Päivä', histfunc='avg',height=600,
+    fig = px.density_heatmap(df, z='Käyttöaste', y='Tunti', x='Päivä', histfunc='avg',height=600,
                              color_continuous_scale=px.colors.diverging.balance, range_color=list(range_of_prod))
 
 
@@ -249,7 +254,8 @@ with tab4:
     st.plotly_chart(fig, use_container_width=True)
 
 with tab5:
-    st.header("Sähkön hinnan jakauma vuorokauden tunneilla")
+    st.header("Sähkön hinnan lämpökartta vuorokauden tunneilla")
+    st.markdown("Lämpökartta kuvaa valitun aikaikkunan sisällä laskettua keskimääräistä sähkön hintaa.")
 
     price_df.index = pd.to_datetime(price_df.index, utc=True)
     price_df = pd.DataFrame(price_df)
