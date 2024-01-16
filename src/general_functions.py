@@ -61,7 +61,9 @@ def sidebar_contact_info():
         icon="github",
         url="https://github.com/pekkon/EnergiaDataApp"
     )
-    st.markdown('Datalähteenä [Fingridin avoin data](https://data.fingrid.fi)')
+    st.markdown('Datalähteet:  \n[Fingridin avoin data](https://data.fingrid.fi)  \n'
+                '[ENTSO-E Transparency Platform](https://transparency.entsoe.eu/)')
+
 
 
 @st.cache_data(show_spinner=False, max_entries=200)

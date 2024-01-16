@@ -13,7 +13,6 @@ import datetime
 
 
 
-@st.cache_data(show_spinner=False, max_entries=200, persist=True)
 def get_wind_df(start, end):
     """
     Get the wind production and capacity values from Fingrid API between the start and end dates.
@@ -35,16 +34,15 @@ def get_wind_df(start, end):
         # Fixing issues in the API capacity (sometimes capacity is missing and API gives low value)
         wind_capacity.loc[wind_capacity['Value'] < wind_capacity['Value'].shift(-24), 'Value'] = np.NaN
         new_df['Kapasiteetti'] = wind_capacity['Value']
-
         # Due to issues with input data with strange timestamps, we need to resample the data
         new_df = new_df.resample('H')
         # Interpolate missing values linearly
         new_df = new_df.interpolate()
         new_df = pd.concat([old_df, new_df])
-        new_df.to_csv('./data/old_wind_corr_data.csv')
+        new_df.drop_duplicates().to_csv('./data/old_wind_corr_data.csv')
 
     else:
-        new_df = old_df
+        new_df = old_df.drop_duplicates()
     new_df['Käyttöaste'] = new_df['Tuulituotanto'] / new_df['Kapasiteetti'] * 100
     # Filter wind data based on the selected date if we have more data already downloaded
     start = pd.to_datetime(start).tz_localize(None)
@@ -53,7 +51,7 @@ def get_wind_df(start, end):
     return new_df.loc[start:end].round(1)
 
 
-@st.cache_data(show_spinner=False, max_entries=200, persist=True)
+
 def get_temperatures(start_time, end_time):
     old_df = pd.read_csv('./data/old_temperatures.csv')
     old_df['Aikaleima'] = pd.to_datetime(old_df['Aikaleima'])
@@ -70,8 +68,8 @@ def get_temperatures(start_time, end_time):
     temperature_df.to_csv('./data/old_temperatures.csv')
     wind_df = get_wind_df(start_date, end_date)
     temperature_df['Keskilämpötila'] = temperature_df.mean(axis=1)
-    filtered_temp_df = temperature_df.loc[start_date:end_date].iloc[:-1].drop_duplicates()
-    filtered_wind_df = wind_df.loc[start_date:end_date].iloc[:-1].drop_duplicates()
+    filtered_temp_df = temperature_df.loc[start_date:end_date].iloc[:-1]
+    filtered_wind_df = wind_df.loc[start_date:end_date].iloc[:-1]
     filtered_wind_df.index = filtered_wind_df.index.tz_localize(None)
     print(filtered_wind_df.tail())
     print(filtered_temp_df.tail())
@@ -259,7 +257,7 @@ with tab5:
     price_df['Päivä'] = price_df.index.date.astype(str)
     price_df.rename({'FI': 'Hinta'}, axis=1, inplace=True)
     range_of_price = st.slider("Valitse hintarajat kuvaajalle:", value=(0, 200), min_value=-100, max_value=500,
-                               step=25)
+                               step=10)
     fig = px.density_heatmap(price_df, z='Hinta', y='Tunti', x='Päivä', histfunc='avg', height=600,
                              range_color=list(range_of_price), color_continuous_scale=px.colors.diverging.balance)
 
