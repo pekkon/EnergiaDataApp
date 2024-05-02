@@ -12,7 +12,6 @@ from src.entsoapi import get_finnish_price_data
 import datetime
 
 
-
 def get_wind_df(start, end):
     """
     Get the wind production and capacity values from Fingrid API between the start and end dates.
@@ -25,7 +24,8 @@ def get_wind_df(start, end):
     old_df['Aikaleima'] = pd.to_datetime(old_df['Aikaleima'])
     old_df.set_index(['Aikaleima'], inplace=True)
     new_start_time = check_previous_data(old_df, start)
-    if new_start_time < end:
+
+    if new_start_time <= pd.to_datetime(end):
         new_df = get_data_from_fg_api_with_start_end(75, new_start_time, end)
 
         new_df.rename({'Value': 'Tuulituotanto'}, axis=1, inplace=True)
@@ -46,7 +46,7 @@ def get_wind_df(start, end):
             # Option 1: Remove duplicates
             df_no_duplicates = new_df[~duplicates]
 
-            # Option 2: Aggregate duplicates (e.g., by taking the mean)
+            # Option 2: Aggregate duplicates
             new_df = new_df.groupby(new_df.index).last()
         new_df.to_csv('./data/old_wind_corr_data.csv')
 
@@ -54,32 +54,38 @@ def get_wind_df(start, end):
         new_df = old_df
     new_df['Käyttöaste'] = new_df['Tuulituotanto'] / new_df['Kapasiteetti'] * 100
     # Filter wind data based on the selected date if we have more data already downloaded
-    start = pd.to_datetime(start).tz_localize(None)
-    end = pd.to_datetime(end).tz_localize(None)
+    start = pd.to_datetime(start)
+    end = pd.to_datetime(end)
 
     return new_df.loc[start:end].round(1)
 
 
-
-def get_temperatures(start_time, end_time):
+def get_temperatures(start_time, end_date):
     old_df = pd.read_csv('./data/old_temperatures.csv')
     old_df['Aikaleima'] = pd.to_datetime(old_df['Aikaleima'])
     old_df.set_index(['Aikaleima'], inplace=True)
     new_start_time = check_previous_data(old_df, start_time)
+
     # Fetch new data only if there's a gap between old data and end_time
-    if new_start_time <= pd.to_datetime(end_time):
-        new_df = temperatures(new_start_time, end_time)
+    if new_start_time <= pd.to_datetime(end_date):
+        new_df = temperatures(new_start_time, end_date)
     else:
         new_df = pd.DataFrame()
-
+    end_time = pd.to_datetime(end_date).tz_localize('Europe/Helsinki')
+    start_time = pd.to_datetime(start_time).tz_localize('Europe/Helsinki')
     # Combine old and new data
     temperature_df = pd.concat([old_df, new_df])
     temperature_df.to_csv('./data/old_temperatures.csv')
-    wind_df = get_wind_df(start_date, end_date)
+    wind_df = get_wind_df(start_time, end_time)
+    #wind_df.index = pd.to_datetime(wind_df.index)
     temperature_df['Keskilämpötila'] = temperature_df.mean(axis=1)
-    filtered_temp_df = temperature_df.loc[start_date:end_date].iloc[:-1]
-    filtered_wind_df = wind_df.loc[start_date:end_date].iloc[:-1]
-    filtered_wind_df.index = filtered_wind_df.index.tz_localize(None)
+    temperature_df.index = temperature_df.index.tz_localize('UTC')
+    temperature_df.index = temperature_df.index.tz_convert('Europe/Helsinki')
+    filtered_temp_df = temperature_df.loc[start_time:end_time]
+    wind_df.index = pd.to_datetime(wind_df.index, utc=True)
+    wind_df.index = wind_df.index.tz_convert('Europe/Helsinki')
+    filtered_wind_df = wind_df.loc[start_time:end_time]
+
     filtered_df = pd.merge_asof(filtered_temp_df, filtered_wind_df, left_index=True, right_index=True)
     return filtered_df[pd.to_datetime(start_time):pd.to_datetime(end_time)]
 
@@ -95,11 +101,10 @@ old_start_dt= datetime.datetime(2018, 1, 1, 0, 0, 0)
 
 start_date, end_date, aggregation_selection = get_general_layout(start=old_start_dt)
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(['Tuulivoiman ja lämpötilan korrelaatio',
-                                        'Tuulivoiman ja sähkön hinnan korrelaatio',
-                                        'Lämpötilan ja sähkön hinnan korrelaatio',
-                                        'Tuulivoiman lämpökartta vuorokauden tunneilla',
-                                        'Sähkön hinnan lämpökartta vuorokauden tunneilla'])
+tab1, tab2, tab3, tab4 = st.tabs(['Tuulivoiman ja lämpötilan korrelaatio',
+                                  'Tuulivoiman, lämpötilan ja sähkön hinnan korrelaatio',
+                                  'Tuulivoiman lämpökartta vuorokauden tunneilla',
+                                  'Sähkön hinnan lämpökartta vuorokauden tunneilla'])
 with tab1:
     st.header("Tuulen ja lämpötilan korrelaatio")
 
@@ -133,78 +138,34 @@ with tab1:
         with chart_container(aggregated_wind, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
             fig = px.scatter(aggregated_wind, x='Keskilämpötila', y='Käyttöaste', color=color, trendline="lowess",
                              trendline_scope="overall", opacity=0.5, height=700,
-                             hover_name=aggregated_wind.index.strftime("%d/%m/%Y %H:%M"), hover_data=['Tuulituotanto', 'Kapasiteetti'],
-                             marginal_x="histogram", marginal_y="histogram")
+                             hover_name=aggregated_wind.index.strftime("%d/%m/%Y %H:%M"), hover_data=['Tuulituotanto', 'Kapasiteetti'])
 
             fig.update_layout(dict(yaxis_title='%', xaxis_autorange=True, yaxis_range=[-2, 102],
                                    xaxis_title='Lämpötila', yaxis_tickformat=".2r", yaxis_hoverformat=".1f"))
             fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            fig.data[-3].name = 'Sovite (LOWESS)'
-            fig.data[-3].update(line_width=4, opacity=1)
-            fig.data[-3].showlegend = True
-            # Remove trendline from the histograms
-            fig.data = [fig.data[i] for i in range(len(fig.data) - 2)]
+            fig.data[-1].name = 'Sovite (LOWESS)'
+            fig.data[-1].update(line_width=4, opacity=1)
+            fig.data[-1].showlegend = True
             st.plotly_chart(fig, use_container_width=True)
+
 with tab2:
 
-    st.header("Tuulen ja sähkön hinnan korrelaatio")
-
+    st.header("Tuulen, lämpötilan ja sähkön hinnan korrelaatio")
     price_df = get_finnish_price_data(start_date, end_date + datetime.timedelta(days=1))
 
     df.index = df.index.tz_localize(None)
     price_df.index = pd.to_datetime(price_df.index, utc=True).tz_localize(None)
     df = pd.merge_asof(df, price_df, left_index=True, right_index=True)
     df = df.rename({'FI': 'Hinta'}, axis=1)
-    agg_wind = aggregate_data(df, aggregation_selection)
-    agg_wind['Vuosi'] = agg_wind.index.year.astype(str)
-    st.markdown("Tuulivoimatuotannon valitun aggregointitason mukaisen käyttöasteen "
-                "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) sekä sähkön hinnan välinen xy-kuvaaja "
-                "kuvaa tuulen ja sähkön hinnan korrelaatiota.")
-    st.markdown("Voit halutessasi piilottaa kuvasta eri vuosien datoja tai sovitteen klikkaamalla niitä selitteestä. "
-                "Tuplaklikkauksella voit valita tietyn vuoden ainoastaan näkyviin. ")
-    st.markdown("Sovitteena kuvaajassa käytetään epälineaarista lokaalia regressiomallia "
-                "[LOWESS](https://en.wikipedia.org/wiki/Local_regression), mikä lasketaan koko valitulle ajanjaksolle. "
-                "Kuvassa näytetään myös sähkön hinnan ja käyttöasteen histogrammit.")
-
-    color = None
-
-
-    if st_toggle_switch("Korosta eri vuodet värein?", default_value=True, label_after=True, key="tab3"):
-        color = 'Vuosi'
-
-    fig = px.scatter(agg_wind, x='Käyttöaste', y='Hinta', color=color, trendline="lowess",
-                     trendline_scope="overall", opacity=0.6, height=1000,
-                     hover_name=agg_wind.index.strftime("%d/%m/%Y %H:%M"),
-                     hover_data=['Tuulituotanto', 'Kapasiteetti', 'Hinta'],
-                     marginal_x="histogram", marginal_y="histogram")
-
-    fig.update_layout(dict(yaxis_title='Hinta €/MWh', yaxis_autorange=True, xaxis_range=[-1, 101],
-                           xaxis_title='%', xaxis_tickformat=".2r", xaxis_hoverformat=".1f"))
-    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    fig.data[-3].name = 'Sovite (LOWESS)'
-    fig.data[-3].update(line_width=4, opacity=1)
-    fig.data[-3].showlegend = True
-    # Remove trendline from the histograms
-    fig.data = [fig.data[i] for i in range(len(fig.data) - 2)]
-    st.plotly_chart(fig, use_container_width=True)
-
-with tab3:
-
-    st.header("Lämpötilan ja sähkön hinnan korrelaatio")
-
-
     temp_price = aggregate_data(df, aggregation_selection)
     temp_price['Vuosi'] = temp_price.index.year.astype(str)
 
 
     st.markdown("Tuulivoimatuotannon valitun aggregointitason mukaisen käyttöasteen "
-                "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä) sekä sähkön hinnan välinen xy-kuvaaja "
-                "kuvaa tuulen ja sähkön hinnan korrelaatiota.")
+                "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä), lämpötilan sekä sähkön hinnan välinen "
+                "xyz-kuvaaja kuvaa tuulen, lämpötilan ja sähkön hinnan välistä korrelaatiota.")
     st.markdown("Voit halutessasi piilottaa kuvasta eri vuosien datoja tai sovitteen klikkaamalla niitä selitteestä. "
                 "Tuplaklikkauksella voit valita tietyn vuoden ainoastaan näkyviin. ")
-    st.markdown("Sovitteena kuvaajassa käytetään epälineaarista lokaalia regressiomallia "
-                "[LOWESS](https://en.wikipedia.org/wiki/Local_regression), mikä lasketaan koko valitulle ajanjaksolle. "
-                "Kuvassa näytetään myös sähkön hinnan ja käyttöasteen histogrammit.")
 
     color = None
 
@@ -212,22 +173,21 @@ with tab3:
     if st_toggle_switch("Korosta eri vuodet värein?", default_value=True, label_after=True, key="tab2"):
         color = 'Vuosi'
 
-    fig = px.scatter(temp_price, x='Keskilämpötila', y='Hinta', color=color, trendline="lowess",
-                     trendline_scope="overall", opacity=0.3, height=700,
-                     hover_name=temp_price.index.strftime("%d/%m/%Y %H:%M"),
-                     marginal_x="histogram", marginal_y="histogram")
+    range_of_price3d = st.slider("Valitse hintarajat kuvaajalle:", value=(0, 100), min_value=-500, max_value=3000,
+                              step=10)
 
-    fig.update_layout(dict(yaxis_title='Hinta €/MWh', xaxis_autorange=True,
-                           xaxis_title='Lämpötila', yaxis_tickformat=",.1r", yaxis_hoverformat=",.1f"))
-    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    fig.data[-3].name = 'Sovite (LOWESS)'
-    fig.data[-3].update(line_width=4, opacity=1)
-    fig.data[-3].showlegend = True
-    # Remove trendline from the histograms
-    fig.data = [fig.data[i] for i in range(len(fig.data) - 2)]
+    fig = px.scatter_3d(temp_price, x='Keskilämpötila', y='Hinta', z='Käyttöaste', color=color, opacity=0.3,
+                        height=1000, range_y=range_of_price3d, hover_name=temp_price.index.strftime("%d/%m/%Y %H:%M"))
+
+    # fig.update_layout(dict(yaxis_title='Hinta €/MWh', xaxis_autorange=True,
+    #                        xaxis_title='Lämpötila', yaxis_tickformat=",.1r", yaxis_hoverformat=",.1f"))
+    # fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    # fig.data[-1].name = 'Sovite (LOWESS)'
+    # fig.data[-1].update(line_width=4, opacity=1)
+    # fig.data[-1].showlegend = True
     st.plotly_chart(fig, use_container_width=True)
 
-with tab4:
+with tab3:
     st.header("Tuulivoiman lämpökartta vuorokauden tunneilla")
     st.markdown("Lämpökartta kuvaa valitun aikaikkunan sisällä laskettua keskimääräistä tuulivoiman käyttöastetta.")
 
@@ -253,7 +213,7 @@ with tab4:
     fig.data[0]['hovertemplate'] = 'Päivä=%{x}<br>Tunti=%{y}<br>Käyttöaste=%{z:.1f}%<extra></extra>'
     st.plotly_chart(fig, use_container_width=True)
 
-with tab5:
+with tab4:
     st.header("Sähkön hinnan lämpökartta vuorokauden tunneilla")
     st.markdown("Lämpökartta kuvaa valitun aikaikkunan sisällä laskettua keskimääräistä sähkön hintaa.")
 

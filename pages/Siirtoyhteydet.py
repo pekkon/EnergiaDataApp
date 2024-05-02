@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 
-st.cache_data(show_spinner=False, max_entries=200)
+@st.cache_data(show_spinner=False, max_entries=200)
 def get_flows_and_capacities_df(start, end, flow_mapping):
     """
     Get the commercial flows and capacity values from Fingrid API between the start and end dates
@@ -41,7 +41,7 @@ def get_flows_and_capacities_df(start, end, flow_mapping):
 start_date, end_date, aggregation_selection = get_general_layout()
 
 st.subheader('Suomen siirtoyhteyksien tilastoja')
-st.markdown("Positiiviset arvot kuvaavat vientiä Suomesta. Datassa on välillä pieniä puutteita tai virheitä.")
+st.markdown("Positiiviset arvot kuvaavat vientiä Suomesta.")
 
 estlink_map = {'Kaupallinen siirto': 140,
                'Vientikapasiteetti': 115,

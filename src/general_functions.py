@@ -53,15 +53,16 @@ def sidebar_contact_info():
     st.subheader("Ota yhteyttä:")
     mention(
         label="Pekko Niemi",
-        icon="twitter",
-        url="https://twitter.com/PekkoNiemi"
+        icon="X",
+        url="https://X.com/PekkoNiemi"
     )
     mention(
         label="EnergiaData-sovelluksen lähdekoodi",
         icon="github",
         url="https://github.com/pekkon/EnergiaDataApp"
     )
-    st.markdown('Datalähteet:  \n[Fingridin avoin data](https://data.fingrid.fi)  \n'
+    st.markdown('Datalähteet:  \n[Fingridin avoin data](https://data.fingrid.fi),  '
+                'lisenssi [CC 4.0 BY](https://creativecommons.org/licenses/by/4.0/)\n'
                 '[ENTSO-E Transparency Platform](https://transparency.entsoe.eu/)')
 
 
@@ -92,10 +93,6 @@ def aggregate_data(df, aggregation_selection, agg_level='mean'):
 def check_previous_data(old_df, start_time):
     # Identify the last date in the existing data
     if not old_df.empty:
-        last_date_in_old_data = old_df.index.max()
+        return old_df.index.max() + datetime.timedelta(hours=1)
     else:
-        last_date_in_old_data = pd.to_datetime(start_time) - datetime.timedelta(hours=1)
-
-    # Adjust start time for new data fetch
-    new_data_start_time = last_date_in_old_data + datetime.timedelta(hours=1)
-    return new_data_start_time
+        return pd.to_datetime(start_time) - datetime.timedelta(hours=1)

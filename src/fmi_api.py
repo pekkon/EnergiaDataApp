@@ -55,11 +55,8 @@ def temperatures(start_time, end_time):
     parameters.append(tuple((i, start_str, end_str)))
 
     all_dfs = []
-    print(parameters)
     for week in parameters:
-        print(week)
         result = get_temp(*week)
-        #print(result)
         cols = list(result.keys())
         df = pd.DataFrame(columns=cols)
         for col in cols:

@@ -38,7 +38,7 @@ def get_production_and_demand_df(start, end):
     production_df = production_df.interpolate()
     return production_df
 
-st.cache_data(show_spinner=False, max_entries=200)
+@st.cache_data(show_spinner=False, max_entries=200)
 def get_generations_df(start, end):
     """
     Get the generation values from Fingrid API between the start and end dates

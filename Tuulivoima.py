@@ -28,7 +28,6 @@ def get_demand_df(start, end):
     return demand_df
 
 
-@st.cache_data(show_spinner=False, max_entries=200)
 def get_wind_df(start, end):
     """
     Get the wind production and capacity values from Fingrid API between the start and end dates.
@@ -143,7 +142,6 @@ with tab2:
 with tab3:
     price_df = get_finnish_price_data(start_date, end_date)
     st.subheader("Tuulituotannon saama hinta valitulla aikavälillä.")
-    st.markdown("Tuulituotannolla painotettu hinta jaettuna koko tuulituotannon summalla valitulla aikavälillä.")
     wind_price_df = wind_df.copy()
     length = len(wind_price_df)
     wind_price_df['Hinta'] = price_df.values[:length]
