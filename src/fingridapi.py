@@ -9,7 +9,6 @@ import datetime as dt
 Reads json-file given by Fingrid's open data API and converts it to list of timestamps and values
 """
 
-@st.cache_data(show_spinner=False, max_entries=200)
 def get_data_from_fg_api_with_start_end(variableid, start, end):
     headers = {'x-api-key': os.environ['FGAPIKEY']}
     start_str = start.strftime("%Y-%m-%dT") + "00:00:00"
