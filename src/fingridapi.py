@@ -9,8 +9,11 @@ import datetime as dt
 Reads json-file given by Fingrid's open data API and converts it to list of timestamps and values
 """
 
-def get_data_from_fg_api_with_start_end(variableid, start, end):
-    headers = {'x-api-key': os.environ['FGAPIKEY']}
+def get_data_from_fg_api_with_start_end(variableid, start, end, apikey=None):
+    if not apikey:
+        headers = {'x-api-key': os.environ['FGAPIKEY']}
+    else:
+        headers = {'x-api-key': apikey}
     start_str = start.strftime("%Y-%m-%dT") + "00:00:00"
     end_str = end.strftime("%Y-%m-%dT") + "23:59:00"
     res = requests.api.get(f'https://data.fingrid.fi/api/datasets/{variableid}/data?startTime={start_str}Z&'
@@ -35,4 +38,14 @@ def get_data_from_fg_api_with_start_end(variableid, start, end):
     df['Aikaleima'] = pd.to_datetime(df['Aikaleima']).dt.tz_convert('Europe/Helsinki')
     df.set_index('Aikaleima', inplace=True)
     df.drop('End', inplace=True, axis=1)
+    return df
+
+def search_fg_api(searchkey, apikey):
+    headers = {'x-api-key': apikey}
+    res = requests.api.get(f"https://data.fingrid.fi/api/datasets?search={searchkey}&orderBy=id",
+                    headers=headers)
+    res_decoded = res.content.decode('utf-8')
+
+    response = json.loads(res_decoded)
+    df = pd.DataFrame(response['data'])
     return df
