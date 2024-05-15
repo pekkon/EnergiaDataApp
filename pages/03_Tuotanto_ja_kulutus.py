@@ -9,6 +9,7 @@ from src.general_functions import get_general_layout, aggregate_data
 from fmiopendata.wfs import download_stored_query
 from datetime import datetime, time, timedelta
 from src.entsoapi import get_finnish_price_data
+
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
     page_icon="https://i.imgur.com/Kd4P3y2.png",
