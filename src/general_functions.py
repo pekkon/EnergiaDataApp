@@ -52,6 +52,11 @@ def sidebar_contact_info():
 
     st.subheader("Ota yhteyttä:")
     mention(
+        label="EnergiaDashboard@gmail.com",
+        icon="📩",
+        url="mailto:energiadashboard@gmail.com"
+    )
+    mention(
         label="Pekko Niemi",
         icon="X",
         url="https://X.com/PekkoNiemi"
