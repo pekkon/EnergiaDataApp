@@ -7,6 +7,7 @@ from streamlit_extras.toggle_switch import st_toggle_switch
 from src.fingridapi import get_data_from_fg_api_with_start_end
 from src.general_functions import get_general_layout, aggregate_data
 from datetime import datetime, time, timedelta
+import time
 
 st.set_page_config(
     page_title="EnergiaData - Suomen siirtoyhteyksien tilastoja",
@@ -28,6 +29,7 @@ def get_flows_and_capacities_df(start, end, flow_mapping):
     dfs = []
     for key, value in flow_mapping.items():
         df = get_data_from_fg_api_with_start_end(value, start, end)
+        time.sleep(1)
         df.rename({'Value': key}, axis=1, inplace=True)
         dfs.append(df)
 
