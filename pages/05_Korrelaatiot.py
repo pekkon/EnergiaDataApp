@@ -164,7 +164,7 @@ with tab2:
     st.markdown("Tuulivoimatuotannon valitun aggregointitason mukaisen käyttöasteen "
                 "(tuulituotanto/asennettu kapasiteetti samalla ajanhetkellä), lämpötilan sekä sähkön hinnan välinen "
                 "xyz-kuvaaja kuvaa tuulen, lämpötilan ja sähkön hinnan välistä korrelaatiota.")
-    st.markdown("Voit halutessasi piilottaa kuvasta eri vuosien datoja tai sovitteen klikkaamalla niitä selitteestä. "
+    st.markdown("Voit halutessasi piilottaa kuvasta eri vuosien datoja klikkaamalla niitä selitteestä. "
                 "Tuplaklikkauksella voit valita tietyn vuoden ainoastaan näkyviin. ")
 
     color = None

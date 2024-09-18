@@ -79,7 +79,10 @@ datahub_mapping = {
     '0': '0-2000 kWh',
     '2k': '2000-20 000 kWh',
     '20k': '20 000-100 000 kWh',
-    '100k': 'yli 100 000 kWh'
+    '100k': 'yli 100 000 kWh',
+    'E13': 'Jatkuva mittaus',
+    'E14': 'Lukemamittaus',
+    'E16': 'Mittaroimaton'
 }
 
 st.image('./src/EnergiaDashboard.png', width=1000)
