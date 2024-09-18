@@ -49,6 +49,38 @@ def search_data_df(search_key, api_key):
     search_df.insert(0, 'search', False)
     return search_df
 
+datahub_mapping = {
+    'BE01': 'Asunnot, kerrostalo',
+    'BE02': 'Asunnot, pientalo (rivi-, pari- ja omakotitalo), sähkölämmitteinen',
+    'BE03': 'Asunnot, pientalo (rivi-, pari- ja omakotitalo), ei-sähkölämmitteinen',
+    'BE04': 'Asunnot, vapaa-ajan asunto',
+    'BE05': 'Asuinkiinteistöt',
+    'BE06': 'Maataloustuotanto (TOL A)',
+    'BE07': 'Teollisuus (TOL B ja C)',
+    'BE08': 'Yhdyskuntahuolto tai energia- ja vesihuolto (TOL D, E)',
+    'BE09': 'Rakentaminen (tilapäissähkö) (TOL F)',
+    'BE10': 'Palvelut',
+    'BE11': 'Ulkovalaistus',
+    'BE12': 'Sähköautojen latauspisteet',
+    'BE13': 'Liikenne',
+    'BE14': 'Muu kohde',
+    'AB01': 'Yritys',
+    'AB02': 'Kuluttaja',
+    'AV01': 'Vesivoima',
+    'AV02': 'Tuulivoima',
+    'AV03': 'Ydinvoima',
+    'AV04': 'Kaasuturbiini',
+    'AV05': 'Diesel-voimakone',
+    'AV06': 'Aurinkovoima',
+    'AV07': 'Aaltovoima',
+    'AV08': 'Yhteistuotanto',
+    'AV09': 'Biovoima',
+    'AV10': 'Muu tuotanto',
+    '0': '0-2000 kWh',
+    '2k': '2000-20 000 kWh',
+    '20k': '20 000-100 000 kWh',
+    '100k': 'yli 100 000 kWh'
+}
 
 st.image('./src/EnergiaDashboard.png', width=1000)
 with st.sidebar:
@@ -78,7 +110,8 @@ with st.expander("Tietolähteiden haku ja valinta"):
             search_score_max = search_df['searchScore'].max()
 
         except KeyError as e:
-            st.error("Haussa tapahtui virhe, yritä uudestaan tai tarkista API-avain.")
+            st.error("Haussa tapahtui virhe, tuloksia ei mahdollisesti löytynyt, voit myös "
+                     "yrittää uudestaan tai tarkista API-avain.")
             st.session_state.clicked = False
     elif not api_key:
         st.warning("Aseta API-avain")
@@ -137,7 +170,20 @@ if st.session_state.search:
             if (end_date - start_date > timedelta(28)) and data_period == "3 min":
                 st.toast(f'Datahaku {data_name} mittausväli on 3 min ja sen haku voi kestää pidempään')
             data = get_data_df(start_date, end_date, data_id, data_name)
-            df_list.append(data)
+
+            # Handle Datahub data
+            if len(data.columns) > 1:
+                cols = list(data.columns[1:])
+                data = pd.pivot_table(data=data, index=data.index, columns=cols, values=data_name)
+                # Flatten multi-index columns
+                if isinstance(data.columns, pd.MultiIndex):
+                    data.columns = [(datahub_mapping[col[0]], datahub_mapping[col[1]]) for col in data.columns]
+                    data.columns = [' - '.join(col).strip() for col in data.columns]
+                else:
+                    data.columns = [datahub_mapping[col] for col in data.columns]
+
+            else:
+                df_list.append(data)
             with chart_container(data, ["Kuvaaja 📈", "Data 📄", "Lataa 📁"], ["CSV"]):
                 fig = px.line(data)
                 fig.update_traces(line=dict(width=2.5))
@@ -145,7 +191,7 @@ if st.session_state.search:
                                        yaxis_hoverformat=".1f"))
                 st.plotly_chart(fig, use_container_width=True)
     st.session_state.fetched = True
-if st.session_state.fetched:
+if st.session_state.fetched and len(df_list) > 1:
     with st.status("Yhdistetty haut", expanded=True):
         aggregation_selection = st.radio('Valitse datan aggregointitaso',
                                          ['3min', '15min', 'Tunti', 'Päivä', 'Viikko', 'Kuukausi'],

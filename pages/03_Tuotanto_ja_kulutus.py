@@ -9,6 +9,7 @@ from src.general_functions import get_general_layout, aggregate_data
 from fmiopendata.wfs import download_stored_query
 from datetime import datetime, time, timedelta
 from src.entsoapi import get_finnish_price_data
+import time
 
 st.set_page_config(
     page_title="EnergiaData - Tuuli- ja sähköjärjestelmätilastoja",
@@ -60,6 +61,7 @@ def get_generations_df(start, end):
     dfs = []
     for key, value in generation_mapping.items():
         df = get_data_from_fg_api_with_start_end(value, start, end)
+        time.sleep(1)
         df.rename({'Value': key}, axis=1, inplace=True)
         dfs.append(df)
 

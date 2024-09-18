@@ -34,10 +34,25 @@ def get_data_from_fg_api_with_start_end(variableid, start, end, apikey=None):
             next_res_decoded = next_res.content.decode('utf-8')
             next_df = pd.DataFrame(json.loads(next_res_decoded)['data'])
             df = pd.concat([df, next_df])
-    df.columns = ['Aikaleima', 'End', 'Value']
+    # Handle potential additional JSON data from Datahub data
+    if len(df.columns) > 3:
+        df.columns = ['Aikaleima', 'End', 'Value', 'JSON']
+        df['JSON'] = df['JSON'].apply(json.loads)
+        new_df = pd.json_normalize(df['JSON'])
+        #st.dataframe(new_df)
+        new_df.drop(['Value'], inplace=True, axis=1)
+        new_df.index = df.index
+        df = pd.concat([df, new_df], axis=1)
+
+
+        #df = pd.pivot_table(data=df, index='Aikaleima', columns=df.columns[-2], values='Value')
+        df.drop(['End', 'JSON', 'TimeSeriesType', 'Res', 'Uom', 'ReadTS', 'Count'], inplace=True, axis=1)
+    else:
+        df.columns = ['Aikaleima', 'End', 'Value']
+
+        df.drop(['End'], inplace=True, axis=1)
     df['Aikaleima'] = pd.to_datetime(df['Aikaleima']).dt.tz_convert('Europe/Helsinki')
     df.set_index('Aikaleima', inplace=True)
-    df.drop('End', inplace=True, axis=1)
     return df
 
 def search_fg_api(searchkey, apikey):
